@@ -5,7 +5,12 @@ import re
 from utils import get_data, update_data, get_highest_id, insert_data
 
 
+# st.session_state kullanarak kullanıcı_id tanımlama
+if 'kullanıcı_id' not in st.session_state:
+    st.session_state.kullanıcı_id = None
 
+if 'rol' not in st.session_state:
+    st.session_state.rol = None
 
 
 # Ana sayfa fonksiyonu
@@ -30,12 +35,16 @@ def main_page():
             query =  "SELECT * FROM bil372_project.kullanıcı where email = '{}' and şifre = '{}' and rol ='{}'".format(mail, sifre,"kullanıcı")
             data = get_data(query)
             
-            if len(data) == 0:
-                st.write("Böyle bir kullanici bulunamamistir.")
-            else:
+            if data is not None and not data.empty:
+                st.session_state.kullanıcı_id = data.iloc[0]['KullanıcıID'] 
+                st.session_state.rol = 'Kullanici'
+
                 st.session_state.prev_page = st.session_state.page
                 st.session_state.page = "User Main"
                 st.experimental_rerun()
+            else:
+                st.write("Kullanıcı bulunamadı veya yanlış giriş bilgileri.")
+
 
     with col2:
         if st.button("Admin Giriş"):
@@ -55,6 +64,7 @@ def main_page():
         st.experimental_rerun()
 
 # Kayıt ol sayfası fonksiyonu
+# TODO bu kısmın sıralaması duzeni biraz degisebilir
 def register_page():
     st.title("Kayıt Ol")
     if st.button("Geri"):
@@ -90,20 +100,27 @@ def register_page():
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         params = (id, isim, soyisim, il, ilce, mahalle)
-
         insert_data(insert_query_hayvan_sahibi, params)
-        
         st.session_state.prev_page = st.session_state.page
-
-        # Bu yorum satirlari acilacak
-        
-        # st.session_state.page = "Ana Sayfa"
-        # st.experimental_rerun()
+        st.session_state.page = "Ana Sayfa"
+        st.experimental_rerun()
 
 # Kullanıcı ana sayfa fonksiyonu
 def user_main_page():
     st.title("Kullanıcı Ana Sayfa")
     st.write("Hayvanlar Listesi ve Bilgileri ve Randevu Alma")
+
+    animal_query = """
+    SELECT * FROM bil372_project.hastahayvan
+    WHERE SahipID = %s;
+    """
+    id_str = str(st.session_state.kullanıcı_id)
+    animals_data = get_data(animal_query, (id_str,))
+    print(animals_data)
+
+    if animals_data is not None and not animals_data.empty:
+        st.table(animals_data)
+
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("Hayvan Ekle"):

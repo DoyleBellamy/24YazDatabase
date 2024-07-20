@@ -1,3 +1,5 @@
+# TODO İki tane olan get_data kodu teke düsürülebilir
+
 import streamlit as st
 import mysql.connector
 import pandas as pd
@@ -99,4 +101,18 @@ def get_highest_id(table_name):
         return None
     finally:
         cursor.close()
+        conn.close()
+
+# Veritabanından veri çekme fonksiyonu
+def get_data(query, params=None):
+    conn = create_connection()
+    if conn is None:
+        return None
+    try:
+        df = pd.read_sql(query, conn, params=params)
+        return df
+    except Error as e:
+        st.error(f"Bir hata oluştu: {e}")
+        return None
+    finally:
         conn.close()
