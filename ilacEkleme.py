@@ -1,3 +1,6 @@
+# TODO Buradaki ilac fiyati kismindan kastimiz ne ona karar vermek lazim
+# Satın aldigi fiyat mi yoksa sattigimiz fiyat mi
+
 import streamlit as st
 import mysql.connector
 import pandas as pd

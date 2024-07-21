@@ -106,11 +106,6 @@ def register_page():
     ilce = st.text_input("İlce", key="register_suborb")
     mahalle = st.text_input("Mahalle", key="register_neighboor")
 
-    # BU KISMI HANGI TURDEKI KAYITLARA IZIN VERECEGIMIZE GORE DEGISTIRECEGIZ
-    rol = st.selectbox(
-        'Kullanıcı türünü secin',
-        ['kullanıcı', 'admin', 'veteriner']
-    )
     if st.button("Kayıt Ol"):
         id = get_highest_id('kullanıcı', 'KullanıcıID')
         id = id + 1        
@@ -118,7 +113,7 @@ def register_page():
         INSERT INTO kullanıcı (kullanıcıID, email, şifre, rol)
         VALUES (%s, %s, %s, %s)
         """
-        params = (id, mail, sifre, rol)
+        params = (id, mail, sifre, 'kullanıcı')
 
         insert_data(insert_query_kullanici, params)
 
@@ -144,6 +139,8 @@ def user_main_page():
     """
     id_str = str(st.session_state.kullanıcı_id)
     animals_data = get_data(animal_query, (id_str,))
+
+    # TODO silinecek
     print(animals_data)
 
     if animals_data is not None and not animals_data.empty:
@@ -195,10 +192,11 @@ def add_animal_page():
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.experimental_rerun()
-    st.text_input("Tür")
-    st.number_input("Kilo", min_value=0.0, step=0.1)
-    st.number_input("Boy", min_value=0.0, step=0.1)
-    st.selectbox("Cinsiyet", options=["Dişi", "Erkek"])
+    hayvan_isim = st.text_input("İsim")
+    hayvan_kilo = st.number_input("Kilo", min_value=0.0, step=0.1)
+    hayvan_boy = st.number_input("Boy", min_value=0.0, step=0.1)
+    hayvan_yaş = st.number_input("Yaş", min_value=0.0, step=0.1)
+    st.selectbox("Tür", options=["Dişi", "Erkek"])
     if st.button("Ekle"):
         st.write("Hayvan eklendi!")  # Placeholder for adding animal to the database
 
