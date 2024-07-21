@@ -12,6 +12,10 @@ if 'kullanıcı_id' not in st.session_state:
 if 'rol' not in st.session_state:
     st.session_state.rol = None
 
+if 'admin_id' not in st.session_state:
+    st.session_state.admin_id = None
+
+
 
 # Ana sayfa fonksiyonu
 def main_page():
@@ -48,9 +52,19 @@ def main_page():
 
     with col2:
         if st.button("Admin Giriş"):
-            st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Admin Main"
-            st.experimental_rerun()
+            query =  "SELECT * FROM bil372_project.kullanıcı where email = '{}' and şifre = '{}' and rol ='{}'".format(mail, sifre,"admin")
+            data = get_data(query)   
+            if data is not None and not data.empty:
+                st.session_state.admin_id = data.iloc[0]['KullanıcıID'] 
+                st.session_state.rol = 'Admin'
+
+                st.session_state.prev_page = st.session_state.page
+                st.session_state.page = "Admin Main"
+                st.experimental_rerun()
+            else:
+                st.write("Admin bulunamadı veya yanlış giriş bilgileri.")
+
+            
     
     with col3:
         if st.button("Veteriner Hekim Giriş"):
@@ -84,7 +98,7 @@ def register_page():
         ['kullanıcı', 'admin', 'veteriner']
     )
     if st.button("Kayıt Ol"):
-        id = get_highest_id('kullanıcı')
+        id = get_highest_id('kullanıcı', 'KullanıcıID')
         id = id + 1        
         insert_query_kullanici = """
         INSERT INTO kullanıcı (kullanıcıID, email, şifre, rol)
@@ -224,10 +238,45 @@ def add_medicine_page():
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.experimental_rerun()
-    st.text_input("İlaç Adı")
-    st.text_input("Ücret")
-    st.text_input("Miktar")
+    ilac_ad = st.text_input("İlaç Adı")
+    ilac_toplam_ucret = st.text_input("Toplam Ücret")
+    ilac_miktar = st.text_input("Miktar")
+
     if st.button("Ekle"):
+        query =  "SELECT * FROM bil372_project.ilaçlar where isim = '{}' and adminId = '{}'".format(ilac_ad, str(st.session_state.admin_id))
+        data = get_data(query)
+
+        # Eger bu admin tarafından eklenen ilac zaten bulunuyorsa eski veriyi güncelliyoruz ekliyoruz
+        if data is not None and not data.empty:
+            # Veri mevcut, güncelle
+            ilac_id = data.iloc[0]['İlaçID']
+            # TODO kodu temizle
+            eski_toplam_ucret = data.iloc[0]['Fiyat']
+            eski_toplam_miktar = data.iloc[0]['Miktar']
+            
+            guncel_ucret = int(eski_toplam_ucret) + int(ilac_toplam_ucret)
+            guncel_miktar = int(eski_toplam_miktar) + int(ilac_miktar)
+
+            update_ilac = """
+            UPDATE ilaçlar
+            SET Fiyat = %s, Miktar = %s
+            WHERE ilaçId = %s
+            """
+            update_params = (str(guncel_ucret), str(guncel_miktar), str(ilac_id))
+            update_data(update_ilac, update_params)
+            
+        # Eger bu admin tarafından eklenen ilac zaten bulunmuyorsa yenisini ekliyoruz
+        else:
+            id = get_highest_id('ilaçlar', 'İlaçID') + 1
+            insert_ilac_admin = """
+            INSERT INTO ilaçlar (ilaçId, isim, Fiyat, Miktar, AdminId)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            # Burada str()'ler gereksiz olabilir
+            params = (str(id), ilac_ad, str(ilac_toplam_ucret), str(ilac_miktar), str(st.session_state.admin_id))
+
+            insert_data(insert_ilac_admin, params)
+        
         st.write("İlaç eklendi!")  # Placeholder for adding medicine to the database
 
 # Admin bilgileri sayfası fonksiyonu

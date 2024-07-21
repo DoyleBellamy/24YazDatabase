@@ -75,7 +75,7 @@ def insert_data(query, params):
         conn.close()
 
 
-def get_highest_id(table_name):
+def get_highest_id(table_name, id_ismi):
     """
     Belirtilen tabloda en yüksek ID değerini getirir.
     
@@ -91,7 +91,7 @@ def get_highest_id(table_name):
 
     try:
         cursor = conn.cursor()
-        query = f"SELECT MAX(kullanıcıid) FROM {table_name}"
+        query = f"SELECT MAX({id_ismi}) FROM {table_name}"
         cursor.execute(query)
         result = cursor.fetchone()
         highest_id = result[0] if result[0] is not None else None
