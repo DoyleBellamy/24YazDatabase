@@ -94,7 +94,7 @@ def main_page():
 # Kayıt ol sayfası fonksiyonu
 # TODO bu kısmın sıralaması duzeni biraz degisebilir
 def register_page():
-    st.title("Kayıt Ol")
+    st.title("Kullanıcı Kayıt Ol")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.experimental_rerun()
@@ -124,6 +124,7 @@ def register_page():
         """
         params = (id, isim, soyisim, il, ilce, mahalle)
         insert_data(insert_query_hayvan_sahibi, params)
+
         st.session_state.prev_page = st.session_state.page
         st.session_state.page = "Ana Sayfa"
         st.experimental_rerun()
@@ -187,17 +188,42 @@ def user_info_page():
     st.write("Doktor ve Uygun Saatler Listesi")
 
 # Hayvan ekle sayfası fonksiyonu
+# TODO Burada renk ekleme özelliğini unutma
 def add_animal_page():
-    st.title("Hayvan Ekle")
+    st.title("Hayvan Ekleme Ekrani")
+    
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.experimental_rerun()
+
     hayvan_isim = st.text_input("İsim")
     hayvan_kilo = st.number_input("Kilo", min_value=0.0, step=0.1)
     hayvan_boy = st.number_input("Boy", min_value=0.0, step=0.1)
     hayvan_yaş = st.number_input("Yaş", min_value=0.0, step=0.1)
-    st.selectbox("Tür", options=["Dişi", "Erkek"])
+    hayvan_renk = st.text_input("Renk")
+    hayvan_tur = st.selectbox("Tür", options=["Kedi", "Köpek", "Kuş", "Tavşan", "Kaplumbağa", "Hamster", "Kobay"])
+    
     if st.button("Ekle"):
+        hayvan_id = get_highest_id('hastahayvan', 'HastaID')
+        hayvan_id = hayvan_id + 1 
+
+        insert_query_hastahayvan = """
+        INSERT INTO hastahayvan (HastaID, SahipID, Yaş, Boy, İsim, Kilo, Tür)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (hayvan_id, str(st.session_state.kullanıcı_id), str(hayvan_yaş), str(hayvan_boy), str(hayvan_isim), str(hayvan_kilo), hayvan_tur)
+
+        insert_data(insert_query_hastahayvan, params)
+
+        if hayvan_renk is not None:
+            insert_query_renkler = """
+            INSERT INTO renkler (HayvanID, Renk)
+            VALUES (%s, %s)
+            """
+            params = (hayvan_id, hayvan_renk)
+
+            insert_data(insert_query_renkler, params)
+
         st.write("Hayvan eklendi!")  # Placeholder for adding animal to the database
 
 # Randevu al sayfası fonksiyonu
