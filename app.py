@@ -145,7 +145,37 @@ def user_main_page():
     print(animals_data)
 
     if animals_data is not None and not animals_data.empty:
-        st.table(animals_data)
+        st.write("Hayvanların Bilgileri:")
+
+        # Seçili satırları saklamak için bir liste
+        selected_rows = []
+
+        for index, row in animals_data.iterrows():
+            # Sütunları oluştur
+            cols = st.columns([1, 5, 1])  # 1: Checkbox için, 5: Satır Bilgisi için, 1: Buton için
+            
+            # Checkbox ve butonları ilgili sütunlara yerleştir
+            with cols[0]:  # Checkbox sütunu
+                if st.checkbox("", key=f"checkbox_{index}"):
+                    selected_rows.append(index)
+            
+            with cols[1]:  # Satır bilgisi sütunu
+                # Her satır için küçük bir tablo oluşturma
+                st.write(pd.DataFrame([row], columns=animals_data.columns))
+            
+            #TODO BURADA SEÇİLEN Hayvan silme işlemi pop-up sonrası gerçekleşecek 
+            with cols[2]:  # Buton sütunu
+                if st.button(f"{row['HastaID']} Sil", key=f"button_{index}"):
+                    st.write(f"{row['HastaID']} için butona tıklandı!")
+
+        # BU KISIM BELKİ SİLİNEBİLİR
+        # Seçili satırları gösterme
+        if selected_rows:
+            st.write("Seçili Satırlar:")
+            selected_data = animals_data.loc[selected_rows]
+            st.table(selected_data)
+
+
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -154,11 +184,13 @@ def user_main_page():
             st.session_state.page = "Add Animal"
             st.experimental_rerun()
     with col2:
+        # TODO Bu kısım eklenecek. Hem bilgilerini görecek ve update de edebilmesi lazım
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "User Info"
             st.experimental_rerun()
     with col3:
+        # TODO Burada checkbox ile seçilen 1 tane hayvan için randevu alacagiz
         if st.button("Randevu Al"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Book Appointment"
@@ -188,7 +220,7 @@ def user_info_page():
     st.write("Doktor ve Uygun Saatler Listesi")
 
 # Hayvan ekle sayfası fonksiyonu
-# TODO Burada renk ekleme özelliğini unutma
+# TODO Bu sayfa da başka değişiklik yapılmayacaksa yeni .py dosyasına geçebilir
 def add_animal_page():
     st.title("Hayvan Ekleme Ekrani")
     
