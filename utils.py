@@ -19,6 +19,7 @@ def create_connection():
     return mysql.connector.connect(**db_config)
 
 # MySQL veritabanından veri almak için fonksiyon
+# TODO Bu get_data versiyonu silinecek 
 def get_data(query):
     conn = create_connection()
     df = pd.read_sql(query, conn)

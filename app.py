@@ -238,6 +238,9 @@ def add_animal_page():
     hayvan_tur = st.selectbox("Tür", options=["Kedi", "Köpek", "Kuş", "Tavşan", "Kaplumbağa", "Hamster", "Kobay"])
     hayvan_cinsiyet = st.selectbox("Cinsiyet", options=["Dişi", "Erkek"])
     
+    # TODO BURAYA EKLENDİ Mİ KONTROLLERİ YAPILIP USER MAIN PAGE'E GECİS YAPILACAK
+    # TODO İlac ekleme sayfasina da ayni sekilde kontrol saglanmali
+    # Ornek icin veteriner ekleme kismindaki koda bakilabilir
     if st.button("Ekle"):
         hayvan_id = get_highest_id('hastahayvan', 'HastaID')
         hayvan_id = hayvan_id + 1 
@@ -298,6 +301,12 @@ def admin_main_page():
 # TODO Burada hem Veteriner bilgilerinin alındığından hem de uygundur ilişkisi üzerinden saatlerle bağlı olduğundan emin olmalıyız
 # TODO Burada uygunluk saatlerini eklemeyeceğiz. Sonraki sayfada bunu yapacağız
 # Yapılmadıysa kontrol edilmeli
+
+def is_valid_number(input_value):
+    return input_value.isdigit() and len(input_value) == 11
+
+
+
 def add_veterinarian_page():
     st.title("Veteriner Hekim Ekle")
     if st.button("Geri"):
@@ -305,13 +314,56 @@ def add_veterinarian_page():
         st.experimental_rerun()
     veteriner_isim = st.text_input("İsim")
     veteriner_soyisim = st.text_input("Soyisim")
+    
+    # TC Kimlik Numarası
     veteriner_tcno = st.text_input("TC Kimlik Numarası")
+    if veteriner_tcno and not is_valid_number(veteriner_tcno):
+        st.error("TC Kimlik Numarası 11 haneli bir sayı olmalıdır.")
+
+    # Telefon Numarası
     veteriner_telno = st.text_input("Telefon Numarası")
+    if veteriner_telno and not is_valid_number(veteriner_telno):
+        st.error("Telefon Numarası 11 haneli bir sayı olmalıdır.")
+    
     veteriner_sehir = st.text_input("Şehir")
     veteriner_ilce =st.text_input("İlçe")
     veteriner_mahalle =st.text_input("Mahalle")
     veteriner_odano =st.text_input("Oda Numarası")
 
+
+
+    if st.button("Ekle"):
+        veteriner_id = get_highest_id('veteriner', 'KullanıcıID') + 1
+
+        insert_query_veteriner = """
+        INSERT INTO veteriner (KullanıcıID, İsim, Soyisim, TCNO, TelefonNo, İlçe, Mahalle, İl, OdaNO, AdminID)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (str(veteriner_id), veteriner_isim, veteriner_soyisim, str(veteriner_tcno), str(veteriner_telno), veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
+
+        insert_data(insert_query_veteriner, params)
+
+        query =  "SELECT * FROM bil372_project.veteriner where KullanıcıID = '{}'".format(veteriner_id)
+        data = get_data(query)
+        
+        # Veteriner Ekleninceki senaryo
+        if data is not None and not data.empty:
+            st.session_state.veteriner_id_added = data.iloc[0]['KullanıcıID'] 
+
+            st.session_state.prev_page = st.session_state.page
+            st.session_state.page = "Veterinarian Add Times Avaliable"
+            st.experimental_rerun()
+
+        # Veteriner Eklenmeyince Error ver
+        else:
+            st.write("Girdiğiniz Bilgilerde Hata var tekrar kontrol edin")
+
+
+
+# Veteriner ana sayfa fonksiyonu
+def add_veterinarian_avaliable_time_page():
+    st.title("Veteriner Uygunluk Süreleri Ekleme")
+    
 
     #  # Takvim veri oluşturma
     # days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma']
@@ -337,20 +389,6 @@ def add_veterinarian_page():
     #     for time in selected_times:
     #         st.write(f"{time[1]} günü, {time[0]} saati seçildi.")
 
-
-
-    if st.button("Ekle"):
-        veteriner_id = get_highest_id('veteriner', 'KullanıcıID') + 1
-
-        insert_query_veteriner = """
-        INSERT INTO veteriner (KullanıcıID, İsim, Soyisim, TCNO, TelefonNo, İlçe, Mahalle, İl, OdaNO, AdminID)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        params = (str(veteriner_id), veteriner_isim, veteriner_soyisim, veteriner_tcno, veteriner_telno, veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
-
-        insert_data(insert_query_veteriner, params)
-
-        st.write("Veteriner hekim eklendi!")  # Placeholder for adding veterinarian to the database
 
 
 
@@ -468,3 +506,5 @@ elif st.session_state.page == "Write Prescription":
     write_prescription_page()
 elif st.session_state.page == "Past Patients":
     past_patients_page()
+elif st.session_state.page == "Veterinarian Add Times Avaliable":
+    add_veterinarian_avaliable_time_page()
