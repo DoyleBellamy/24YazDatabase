@@ -4,6 +4,7 @@ import pandas as pd
 import re
 from utils import get_data, update_data, get_highest_id, insert_data
 from ilacEkleme import add_medicine_page
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 # st.session_state kullanarak kullanıcı_id tanımlama
 if 'kullanıcı_id' not in st.session_state:
@@ -175,10 +176,9 @@ def user_main_page():
             selected_data = animals_data.loc[selected_rows]
             st.table(selected_data)
 
-
-
     col1, col2, col3 = st.columns(3)
     with col1:
+        # Bu kısmın kodu eklendi hazır
         if st.button("Hayvan Ekle"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Add Animal"
@@ -191,6 +191,7 @@ def user_main_page():
             st.experimental_rerun()
     with col3:
         # TODO Burada checkbox ile seçilen 1 tane hayvan için randevu alacagiz
+        # TODO Secili herhangi bir hayvan yoksa randevu ala bastığı durumda hata vericez
         if st.button("Randevu Al"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Book Appointment"
@@ -198,6 +199,7 @@ def user_main_page():
 
     st.markdown("<br><br><br><br>", unsafe_allow_html=True)  # Add some space before the larger button
 
+    # Bu günün tarihiyle randevu tarihini kıyaslayıp ekleyeceğiz
     if st.button("Geçmiş Randevularım", key="large_button", help="Geçmiş Randevuları Görüntüle", use_container_width=True):
         st.session_state.prev_page = st.session_state.page
         st.session_state.page = "Past Appointments"
@@ -234,16 +236,17 @@ def add_animal_page():
     hayvan_yaş = st.number_input("Yaş", min_value=0.0, step=0.1)
     hayvan_renk = st.text_input("Renk")
     hayvan_tur = st.selectbox("Tür", options=["Kedi", "Köpek", "Kuş", "Tavşan", "Kaplumbağa", "Hamster", "Kobay"])
+    hayvan_cinsiyet = st.selectbox("Cinsiyet", options=["Dişi", "Erkek"])
     
     if st.button("Ekle"):
         hayvan_id = get_highest_id('hastahayvan', 'HastaID')
         hayvan_id = hayvan_id + 1 
 
         insert_query_hastahayvan = """
-        INSERT INTO hastahayvan (HastaID, SahipID, Yaş, Boy, İsim, Kilo, Tür)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO hastahayvan (HastaID, SahipID, Yaş, Boy, İsim, Kilo, Tür, Cinsiyet)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
-        params = (hayvan_id, str(st.session_state.kullanıcı_id), str(hayvan_yaş), str(hayvan_boy), str(hayvan_isim), str(hayvan_kilo), hayvan_tur)
+        params = (hayvan_id, str(st.session_state.kullanıcı_id), str(hayvan_yaş), str(hayvan_boy), str(hayvan_isim), str(hayvan_kilo), hayvan_tur, hayvan_cinsiyet)
 
         insert_data(insert_query_hastahayvan, params)
 
@@ -291,15 +294,62 @@ def admin_main_page():
             st.experimental_rerun()
 
 # Veteriner hekim ekle sayfası fonksiyonu
+
+# TODO Burada hem Veteriner bilgilerinin alındığından hem de uygundur ilişkisi üzerinden saatlerle bağlı olduğundan emin olmalıyız
+# TODO Burada uygunluk saatlerini eklemeyeceğiz. Sonraki sayfada bunu yapacağız
+# Yapılmadıysa kontrol edilmeli
 def add_veterinarian_page():
     st.title("Veteriner Hekim Ekle")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.experimental_rerun()
-    st.text_input("Mail Adresi")
-    st.text_input("İsim")
-    st.text_input("Soyisim vs.")
+    veteriner_isim = st.text_input("İsim")
+    veteriner_soyisim = st.text_input("Soyisim")
+    veteriner_tcno = st.text_input("TC Kimlik Numarası")
+    veteriner_telno = st.text_input("Telefon Numarası")
+    veteriner_sehir = st.text_input("Şehir")
+    veteriner_ilce =st.text_input("İlçe")
+    veteriner_mahalle =st.text_input("Mahalle")
+    veteriner_odano =st.text_input("Oda Numarası")
+
+
+    #  # Takvim veri oluşturma
+    # days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma']
+    # hours = [f"{hour}:00" for hour in range(9, 19)]
+
+    # # Boş bir DataFrame oluşturma
+    # calendar_data = pd.DataFrame(index=hours, columns=days)
+
+    # # Seçimler için boş bir DataFrame oluşturma
+    # selection_data = pd.DataFrame(False, index=hours, columns=days)
+
+    # # Takvim tabloyu oluşturma ve seçimleri takip etme
+    # for hour in hours:
+    #     cols = st.columns(len(days) + 1)  # Günler ve saatler için sütunlar oluşturma
+    #     cols[0].write(hour)  # Saatleri ilk sütuna yazma
+    #     for i, day in enumerate(days):
+    #         selection_data.at[hour, day] = cols[i + 1].checkbox("", key=f"{day}_{hour}")
+
+    # # Seçilen zaman dilimlerini gösterme
+    # selected_times = selection_data[selection_data == True].stack().index.tolist()
+    # if selected_times:
+    #     st.write("Seçilen Zaman Dilimleri:")
+    #     for time in selected_times:
+    #         st.write(f"{time[1]} günü, {time[0]} saati seçildi.")
+
+
+
     if st.button("Ekle"):
+        veteriner_id = get_highest_id('veteriner', 'KullanıcıID') + 1
+
+        insert_query_veteriner = """
+        INSERT INTO veteriner (KullanıcıID, İsim, Soyisim, TCNO, TelefonNo, İlçe, Mahalle, İl, OdaNO, AdminID)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (str(veteriner_id), veteriner_isim, veteriner_soyisim, veteriner_tcno, veteriner_telno, veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
+
+        insert_data(insert_query_veteriner, params)
+
         st.write("Veteriner hekim eklendi!")  # Placeholder for adding veterinarian to the database
 
 
