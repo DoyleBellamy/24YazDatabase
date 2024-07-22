@@ -430,7 +430,9 @@ CREATE TABLE `veteriner` (
   UNIQUE KEY `TCNO` (`TCNO`),
   KEY `AdminID` (`AdminID`),
   CONSTRAINT `veteriner_ibfk_1` FOREIGN KEY (`KullanıcıID`) REFERENCES `kullanıcı` (`KullanıcıID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `veteriner_ibfk_2` FOREIGN KEY (`AdminID`) REFERENCES `admin` (`KullanıcıID`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `veteriner_ibfk_2` FOREIGN KEY (`AdminID`) REFERENCES `admin` (`KullanıcıID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `chk_TCNO_length` CHECK (CHAR_LENGTH(`TCNO`) = 11),
+  CONSTRAINT `chk_TelefonNo_length` CHECK (`TelefonNo` IS NULL OR CHAR_LENGTH(`TelefonNo`) = 11)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
