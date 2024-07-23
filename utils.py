@@ -15,6 +15,14 @@ from mysql.connector import Error
     'database': 'bil372_project',
 }'''
 
+def format_time(time_str):
+    """Saat formatını düzenler (09.00 -> 9, 17.00 -> 17)."""
+    try:
+        return int(time_str.split('.')[0])  # Saat kısmını integer'a çevir
+    except ValueError:
+        return time_str  # Eğer format doğru değilse orijinal değeri döndür
+
+
 # MySQL bağlantısı oluştur
 def create_connection():
     return mysql.connector.connect(**c.Config.db_config)

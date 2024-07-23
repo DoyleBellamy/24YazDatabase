@@ -2,7 +2,7 @@ import streamlit as st
 import mysql.connector
 import pandas as pd
 import re
-from utils import get_data, update_data, get_highest_id, insert_data
+from utils import get_data, update_data, get_highest_id, insert_data, format_time
 from ilacEkleme import add_medicine_page
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
@@ -330,8 +330,9 @@ def add_veterinarian_page():
     veteriner_mahalle =st.text_input("Mahalle")
     veteriner_odano =st.text_input("Oda Numarası")
 
-
-
+    if st.button("Geç"):
+        st.session_state.page = "Veterinarian Add Times Avaliable"
+        st.experimental_rerun()
     if st.button("Ekle"):
         veteriner_id = get_highest_id('veteriner', 'KullanıcıID') + 1
 
@@ -356,41 +357,73 @@ def add_veterinarian_page():
 
         # Veteriner Eklenmeyince Error ver
         else:
-            st.write("Girdiğiniz Bilgilerde Hata var tekrar kontrol edin")
+            st.error("Girdiğiniz Bilgilerde Hata var tekrar kontrol edin")
 
 
-
-# Veteriner ana sayfa fonksiyonu
+# Burada havali bir tablo olacak
+# TODO BURADA 1 tur uygunluk eklendi deyip sonrasında pop-up ile sonrasında bu popup'dan ilerle deyince admin sayfasına geçme işlemi gerçekleştirilebilir.
+# TODO bu sayede veteriner_added state'i de silinebilir
 def add_veterinarian_avaliable_time_page():
     st.title("Veteriner Uygunluk Süreleri Ekleme")
+    #Hepsinin default'ını false'a çek
+    df = pd.DataFrame(
+        [   
+        { "09.00": False, "10.00": False, "11.00": False, "13.00": False, "14.00": False, "15.00": False, "16.00": False, "17.00": False},
+        { "09.00": False, "10.00": False, "11.00": False, "13.00": False, "14.00": False, "15.00": False, "16.00": False, "17.00": False},
+        { "09.00": False, "10.00": False, "11.00": False, "13.00": False, "14.00": False, "15.00": False, "16.00": False, "17.00": False},
+        { "09.00": False, "10.00": False, "11.00": False, "13.00": False, "14.00": False, "15.00": False, "16.00": False, "17.00": False},
+        { "09.00": False, "10.00": False, "11.00": False, "13.00": False, "14.00": False, "15.00": False, "16.00": False, "17.00": False}
+        ],index=["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
+    )
+
+    # DataFrame'i göster
+    calendar_data_modified = st.data_editor(df)
+    print(calendar_data_modified)
     
+    # TODO Buradaki Prev_page'e karar verilecek Belki olmayadabilir
+    if st.button("Uygunluk Sürelerini Kaydet", key="large_button", use_container_width=True):
+        # st.session_state.prev_page = st.session_state.page
+        true_values = [(row, col) for row in df.index for col in calendar_data_modified.columns if calendar_data_modified.at[row, col] == True]
+        tum_idler = []
+        for day, time in true_values:
+            formatted_time = format_time(time)
+            saatler_query = """
+            SELECT SaatID FROM bil372_project.saatler
+            WHERE Saat = %s and Gün = %s;
+            """
+            params = (formatted_time, day)
+            saat_idler_temp = get_data(query=saatler_query, params=params)
+            birinci_sutun_degerleri = saat_idler_temp.iloc[:, 0].tolist()
+            tum_idler.extend(birinci_sutun_degerleri)            
+        print(tum_idler)
+        print(true_values)
+        insert_query_veteriner_uygunluk = """
+        INSERT INTO uygundur (SaatID, VeterinerID)
+        VALUES (%s, %s)
+                """
+        for saat_id in tum_idler:
+            params = (str(saat_id), str(st.session_state.veteriner_id_added))
+            insert_data(insert_query_veteriner_uygunluk, params)
 
-    #  # Takvim veri oluşturma
-    # days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma']
-    # hours = [f"{hour}:00" for hour in range(9, 19)]
+        st.session_state.page = "Admin Main"
+        st.experimental_rerun()
 
-    # # Boş bir DataFrame oluşturma
-    # calendar_data = pd.DataFrame(index=hours, columns=days)
+    #TODO Burada gunlerin hepsini secmek icin olan kod eklenecek
+    # 5 tane butonla bunu halledecegiz ama sonraki is 
 
-    # # Seçimler için boş bir DataFrame oluşturma
-    # selection_data = pd.DataFrame(False, index=hours, columns=days)
-
-    # # Takvim tabloyu oluşturma ve seçimleri takip etme
-    # for hour in hours:
-    #     cols = st.columns(len(days) + 1)  # Günler ve saatler için sütunlar oluşturma
-    #     cols[0].write(hour)  # Saatleri ilk sütuna yazma
-    #     for i, day in enumerate(days):
-    #         selection_data.at[hour, day] = cols[i + 1].checkbox("", key=f"{day}_{hour}")
-
-    # # Seçilen zaman dilimlerini gösterme
-    # selected_times = selection_data[selection_data == True].stack().index.tolist()
-    # if selected_times:
-    #     st.write("Seçilen Zaman Dilimleri:")
-    #     for time in selected_times:
-    #         st.write(f"{time[1]} günü, {time[0]} saati seçildi.")
-
-
-
+    # col1, col2, col3, col4, col5 = st.columns(5)
+    # with col1:
+    #     state_pazartesi = True
+    #     print(state_pazartesi)
+    #     if st.button("Pazartesi"):
+    #         if state_pazartesi:
+    #             calendar_data_modified.loc["Pazartesi"] = True
+    #             state_pazartesi = False
+    #         else: 
+    #             print(state_pazartesi)
+    #             df.loc["Pazartesi"] = False
+    
+    
 
 # Admin bilgileri sayfası fonksiyonu
 def admin_info_page():
