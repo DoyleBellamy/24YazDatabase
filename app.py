@@ -187,7 +187,7 @@ def user_main_page():
         # TODO Bu kısım eklenecek. Hem bilgilerini görecek ve update de edebilmesi lazım
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "User Info"
+            st.session_state.page = "Info Page"
             st.experimental_rerun()
     with col3:
         # TODO Burada checkbox ile seçilen 1 tane hayvan için randevu alacagiz
@@ -386,7 +386,7 @@ def add_veterinarian_avaliable_time_page():
     calendar_data_modified = st.data_editor(df)
     print(calendar_data_modified)
     
-    # TODO Buradaki Prev_page'e karar verilecek Belki olmayadabilir
+    # TODO Buradaki Prev_pages'e karar verilecek Belki olmayadabilir
     if st.button("Uygunluk Sürelerini Kaydet", key="large_button", use_container_width=True):
         # st.session_state.prev_page = st.session_state.page
         true_values = [(row, col) for row in df.index for col in calendar_data_modified.columns if calendar_data_modified.at[row, col] == True]
@@ -461,6 +461,38 @@ def admin_info_page():
             else:
                 st.error("Lütfen bilgileri doğru formatta girin.")
 
+def veterinarian_info_page():
+    st.title("Bilgilerim")
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.experimental_rerun()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        isim = st.text_input("İsim")
+        soyisim = st.text_input("Soyisim")
+        tc_kimlik_no = st.number_input("TC Kimlik No", value=None, format="%.0f")
+        if tc_kimlik_no and not is_valid_tc(tc_kimlik_no):
+            st.error("TC kimlik numarası 11 haneli olmalıdır.")
+
+    with col2:
+        email_adresi = st.text_input("E-Mail Adresi")
+        telefon = st.number_input("Telefon Numarası", value=None, format="%.0f", placeholder="5__")
+        if telefon and not is_valid_tel(telefon):
+            st.error("Geçersiz telefon numarası.")
+        adres = st.text_input("Adres")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Kaydet"):
+            if is_valid_tc(tc_kimlik_no) and is_valid_tel(telefon):
+                st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
+            else:
+                st.error("Lütfen bilgileri doğru formatta girin.")
+    with col2:
+        if st.button("Şifreyi Değiştir"):
+            st.write("Şifre değiştirme functionality to be implemented.")  # Placeholder for changing password
+
 # Veteriner ana sayfa fonksiyonu
 def veterinarian_main_page():
     st.title("Veteriner Ana Sayfa")
@@ -479,7 +511,7 @@ def veterinarian_main_page():
     with col3:
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Admin Info"
+            st.session_state.page = "Info Page"
             st.experimental_rerun()
 
 # Reçete yaz sayfası fonksiyonu
@@ -542,3 +574,5 @@ elif st.session_state.page == "Past Patients":
     past_patients_page()
 elif st.session_state.page == "Veterinarian Add Times Avaliable":
     add_veterinarian_avaliable_time_page()
+elif st.session_state.page == "Info Page":
+    veterinarian_info_page()
