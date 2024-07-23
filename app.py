@@ -4,7 +4,7 @@ import pandas as pd
 import re
 from utils import get_data, update_data, get_highest_id, insert_data, format_time
 from ilacEkleme import add_medicine_page
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+#from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 # st.session_state kullanarak kullanıcı_id tanımlama
 if 'kullanıcı_id' not in st.session_state:
@@ -302,10 +302,19 @@ def admin_main_page():
 # TODO Burada uygunluk saatlerini eklemeyeceğiz. Sonraki sayfada bunu yapacağız
 # Yapılmadıysa kontrol edilmeli
 
-def is_valid_number(input_value):
-    return input_value.isdigit() and len(input_value) == 11
+def is_valid_tc(input_value):
+    input_value = int(input_value)
+    return len(str(input_value)) == 11
 
+def is_valid_tel(input_value):
+    input_value = int(input_value)
+    return len(str(input_value)) == 10
 
+def validate_tc_kimlik_no(tc_kimlik_no):
+        return re.fullmatch(r'\d{11}', tc_kimlik_no) is not None
+
+def validate_telefon(telefon):
+    return re.fullmatch(r'\(\+90\) 05\d{9}', telefon) is not None
 
 def add_veterinarian_page():
     st.title("Veteriner Hekim Ekle")
@@ -316,14 +325,16 @@ def add_veterinarian_page():
     veteriner_soyisim = st.text_input("Soyisim")
     
     # TC Kimlik Numarası
-    veteriner_tcno = st.text_input("TC Kimlik Numarası")
-    if veteriner_tcno and not is_valid_number(veteriner_tcno):
+    veteriner_tcno = st.number_input("TC Kimlik Numarası", value=None, format="%d")
+    if veteriner_tcno and not is_valid_tc(veteriner_tcno):
         st.error("TC Kimlik Numarası 11 haneli bir sayı olmalıdır.")
 
     # Telefon Numarası
-    veteriner_telno = st.text_input("Telefon Numarası")
-    if veteriner_telno and not is_valid_number(veteriner_telno):
-        st.error("Telefon Numarası 11 haneli bir sayı olmalıdır.")
+    veteriner_telno = st.number_input("Telefon Numarası", value=None, format="%d", placeholder="5__")
+    if veteriner_telno and not is_valid_tel(veteriner_telno):
+        st.error("Geçersiz telefon numarası.")
+
+    
     
     veteriner_sehir = st.text_input("Şehir")
     veteriner_ilce =st.text_input("İlçe")
@@ -442,17 +453,21 @@ def admin_info_page():
     with col1:
         isim = st.text_input("İsim")
         soyisim = st.text_input("Soyisim")
-        tc_kimlik_no = st.text_input("T.C. Kimlik no", max_chars=11)
+        tc_kimlik_no = st.number_input("TC Kimlik No", value=None, format="%d")
+        if tc_kimlik_no and not is_valid_tc(tc_kimlik_no):
+            st.error("TC kimlik numarası 11 haneli olmalıdır.")
 
     with col2:
         email_adresi = st.text_input("E-Mail Adresi")
-        telefon = st.text_input("Telefon", value="(+90) 05")
+        telefon = st.number_input("Telefon Numarası", value=None, format="%d", placeholder="5__")
+        if telefon and not is_valid_tel(telefon):
+            st.error("Geçersiz telefon numarası.")
         adres = st.text_input("Adres")
     
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Kaydet"):
-            if validate_tc_kimlik_no(tc_kimlik_no) and validate_telefon(telefon):
+            if is_valid_tc(tc_kimlik_no) and is_valid_tel(telefon):
                 st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
             else:
                 st.error("Lütfen bilgileri doğru formatta girin.")
