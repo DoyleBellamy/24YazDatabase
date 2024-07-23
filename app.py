@@ -130,6 +130,37 @@ def register_page():
         st.session_state.page = "Ana Sayfa"
         st.experimental_rerun()
 
+# TODO DEĞİŞTİRDİ OLARAK GÖSTERİYOR TÜM IFLERI GEÇİYOR ANCAK get_data ÇAĞRILDIĞINDA ESKİ ŞİFRE GÖZÜKÜYOR
+# Şifre değiştirme sayfası
+def change_password_page():
+    st.title("Şifre Değiştir")
+    current_password = st.text_input("Mevcut Şifre", type="password")
+    new_password = st.text_input("Yeni Şifre", type="password")
+    confirm_password = st.text_input("Yeni Şifreyi Onayla", type="password")
+
+    if st.button("Şifreyi Değiştir"):
+        if new_password != confirm_password:
+            st.error("Yeni şifreler uyuşmuyor.")
+        else:
+            user_id = (st.session_state.kullanıcı_id or 
+                       st.session_state.admin_id or 
+                       st.session_state.veteriner_id)
+            if user_id is None:
+                st.error("Kullanıcı kimliği bulunamadı.")
+            else:
+                user_id = int(user_id)  # Ensure user_id is an integer
+                query = "SELECT şifre FROM bil372_project.kullanıcı WHERE KullanıcıID = '{}'".format(user_id)
+                data = get_data(query)
+                print("Select Query Data:", data)
+                
+                if data is not None and not data.empty and data.iloc[0]['şifre'] == current_password:
+                    update_query = "UPDATE bil372_project.kullanıcı SET şifre = '{}' WHERE KullanıcıID = '{}'".format(new_password, user_id)
+                    print("Update Query:", update_query)
+                    update_data(update_query, (new_password, user_id))
+                    st.write("Şifre Değiştirildi.")
+                else:
+                    st.error("Mevcut şifre yanlış.")
+
 # Kullanıcı ana sayfa fonksiyonu
 def user_main_page():
     st.title("Kullanıcı Ana Sayfa")
@@ -491,7 +522,9 @@ def veterinarian_info_page():
                 st.error("Lütfen bilgileri doğru formatta girin.")
     with col2:
         if st.button("Şifreyi Değiştir"):
-            st.write("Şifre değiştirme functionality to be implemented.")  # Placeholder for changing password
+            st.session_state.prev_page = st.session_state.page
+            st.session_state.page = "Change Password"
+            st.experimental_rerun()
 
 # Veteriner ana sayfa fonksiyonu
 def veterinarian_main_page():
@@ -576,3 +609,5 @@ elif st.session_state.page == "Veterinarian Add Times Avaliable":
     add_veterinarian_avaliable_time_page()
 elif st.session_state.page == "Info Page":
     veterinarian_info_page()
+elif st.session_state.page == "Change Password":
+    change_password_page()
