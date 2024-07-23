@@ -15,8 +15,8 @@ def add_medicine_page():
         st.session_state.page = st.session_state.prev_page
         st.experimental_rerun()
     ilac_ad = st.text_input("İlaç Adı")
-    ilac_toplam_ucret = st.text_input("Toplam Ücret")
-    ilac_miktar = st.text_input("Miktar")
+    ilac_toplam_ucret = st.number_input("Toplam Ücret", value=None, format="%.0f")
+    ilac_miktar = st.number_input("Miktar", value=None, format="%.0f")
 
     if st.button("Ekle"):
         query =  "SELECT * FROM bil372_project.ilaçlar where isim = '{}' and adminId = '{}'".format(ilac_ad, str(st.session_state.admin_id))
