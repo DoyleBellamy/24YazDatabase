@@ -310,11 +310,6 @@ def is_valid_tel(input_value):
     input_value = int(input_value)
     return len(str(input_value)) == 10
 
-def validate_tc_kimlik_no(tc_kimlik_no):
-        return re.fullmatch(r'\d{11}', tc_kimlik_no) is not None
-
-def validate_telefon(telefon):
-    return re.fullmatch(r'\(\+90\) 05\d{9}', telefon) is not None
 
 def add_veterinarian_page():
     st.title("Veteriner Hekim Ekle")
@@ -442,12 +437,6 @@ def admin_info_page():
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.experimental_rerun()
-
-    def validate_tc_kimlik_no(tc_kimlik_no):
-        return re.fullmatch(r'\d{11}', tc_kimlik_no) is not None
-
-    def validate_telefon(telefon):
-        return re.fullmatch(r'\(\+90\) 05\d{9}', telefon) is not None
 
     col1, col2 = st.columns(2)
     with col1:
