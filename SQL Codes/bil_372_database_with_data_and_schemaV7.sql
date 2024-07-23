@@ -467,7 +467,7 @@ CREATE TABLE `yetkinlik` (
 
 LOCK TABLES `yetkinlik` WRITE;
 /*!40000 ALTER TABLE `yetkinlik` DISABLE KEYS */;
-INSERT INTO `yetkinlik` VALUES (6,'Hamster'),(7,'Hamster'),(8,'Köpek'),(9,'Köpek'),(10,'Kobay'),(11,'Köpek'),(12,'Kuş'),(13,'Hamster'),(14,'Köpek'),(15,'Kobay'),(16,'Kobay'),(17,'Kuş'),(18,'Kaplumbağa'),(19,'Köpek'),(20,'\"Kedi'),(6,'Kobay'),(6,'\"Kedi'),(6,'Köpek'),(7,'Köpek'),(7,'\"Kedi'),(7,'Hamster'),(7,'Kuş'),(8,'Tavşan'),(8,'\"Kedi'),(8,'Kaplumbağa'),(9,'Kobay'),(10,'\"Kedi'),(11,'Tavşan'),(11,'Kuş'),(12,'Köpek'),(13,'Kuş'),(13,'Köpek'),(14,'Kobay'),(15,'Köpek'),(15,'Kaplumbağa'),(15,'\"Kedi'),(16,'\"Kedi'),(16,'Kuş'),(16,'Kaplumbağa'),(17,'Tavşan'),(18,'Köpek'),(19,'Tavşan'),(19,'\"Kedi'),(20,'Tavşan');
+INSERT INTO `yetkinlik` VALUES (6,'Hamster'),(7,'Hamster'),(8,'Köpek'),(9,'Köpek'),(10,'Kobay'),(11,'Köpek'),(12,'Kuş'),(13,'Hamster'),(14,'Köpek'),(15,'Kobay'),(16,'Kobay'),(17,'Kuş'),(18,'Kaplumbağa'),(19,'Köpek'),(20,'Kedi'),(6,'Kobay'),(6,'Kedi'),(6,'Köpek'),(7,'Köpek'),(7,'Kedi'),(7,'Hamster'),(7,'Kuş'),(8,'Tavşan'),(8,'Kedi'),(8,'Kaplumbağa'),(9,'Kobay'),(10,'Kedi'),(11,'Tavşan'),(11,'Kuş'),(12,'Köpek'),(13,'Kuş'),(13,'Köpek'),(14,'Kobay'),(15,'Köpek'),(15,'Kaplumbağa'),(15,'Kedi'),(16,'Kedi'),(16,'Kuş'),(16,'Kaplumbağa'),(17,'Tavşan'),(18,'Köpek'),(19,'Tavşan'),(19,'Kedi'),(20,'Tavşan');
 /*!40000 ALTER TABLE `yetkinlik` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
