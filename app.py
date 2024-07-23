@@ -325,12 +325,12 @@ def add_veterinarian_page():
     veteriner_soyisim = st.text_input("Soyisim")
     
     # TC Kimlik Numarası
-    veteriner_tcno = st.number_input("TC Kimlik Numarası", value=None, format="%d")
+    veteriner_tcno = st.number_input("TC Kimlik Numarası", value=None, format="%.0f")
     if veteriner_tcno and not is_valid_tc(veteriner_tcno):
         st.error("TC Kimlik Numarası 11 haneli bir sayı olmalıdır.")
 
     # Telefon Numarası
-    veteriner_telno = st.number_input("Telefon Numarası", value=None, format="%d", placeholder="5__")
+    veteriner_telno = st.number_input("Telefon Numarası", value=None, format="%.0f", placeholder="5__")
     if veteriner_telno and not is_valid_tel(veteriner_telno):
         st.error("Geçersiz telefon numarası.")
 
@@ -453,13 +453,13 @@ def admin_info_page():
     with col1:
         isim = st.text_input("İsim")
         soyisim = st.text_input("Soyisim")
-        tc_kimlik_no = st.number_input("TC Kimlik No", value=None, format="%d")
+        tc_kimlik_no = st.number_input("TC Kimlik No", value=None, format="%.0f")
         if tc_kimlik_no and not is_valid_tc(tc_kimlik_no):
             st.error("TC kimlik numarası 11 haneli olmalıdır.")
 
     with col2:
         email_adresi = st.text_input("E-Mail Adresi")
-        telefon = st.number_input("Telefon Numarası", value=None, format="%d", placeholder="5__")
+        telefon = st.number_input("Telefon Numarası", value=None, format="%.0f", placeholder="5__")
         if telefon and not is_valid_tel(telefon):
             st.error("Geçersiz telefon numarası.")
         adres = st.text_input("Adres")
@@ -471,9 +471,6 @@ def admin_info_page():
                 st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
             else:
                 st.error("Lütfen bilgileri doğru formatta girin.")
-    with col2:
-        if st.button("Şifreyi Değiştir"):
-            st.write("Şifre değiştirme functionality to be implemented.")  # Placeholder for changing password
 
 # Veteriner ana sayfa fonksiyonu
 def veterinarian_main_page():
