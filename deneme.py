@@ -1,18 +1,13 @@
 import streamlit as st
 import mysql.connector
 import pandas as pd
+import config as c
 
 # MySQL veritabanına bağlanmak için gereken bilgiler
-db_config = {
-    'user': 'root',
-    'password': 'umut',
-    'host': '127.0.0.1',
-    'database': 'bil372_project',
-}
-
+#c.Config.dbconfig ile çekiliyor
 # MySQL bağlantısı oluştur
 def create_connection():
-    return mysql.connector.connect(**db_config)
+    return mysql.connector.connect(**c.Config.db_config)
 
 # MySQL veritabanından veri almak için fonksiyon
 def get_data(query):
@@ -33,7 +28,7 @@ def main_page():
 def page1():
     st.title("Sayfa 1")
     st.write("Bu, Sayfa 1'dir.")
-    st.image("C:\\Users\\umutozdemir\\Desktop\\GKEV9LXW8AAO1Eq.jpg", caption="Örnek Resim")
+    #st.image("C:\\Users\\umutozdemir\\Desktop\\GKEV9LXW8AAO1Eq.jpg", caption="Örnek Resim")
     query = st.text_input("SQL Sorgunuzu Girin:", "SELECT * FROM your_table")
     if st.button("Verileri Getir"):
         data = get_data(query)

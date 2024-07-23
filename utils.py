@@ -4,19 +4,20 @@ import streamlit as st
 import mysql.connector
 import pandas as pd
 import re
-import config
+import config as c
 from mysql.connector import Error
 
-db_config = {
+#Giriş bilgileri
+'''db_config = {
     'user': 'root',
     'password': 'umut',
     'host': '127.0.0.1',
     'database': 'bil372_project',
-}
+}'''
 
 # MySQL bağlantısı oluştur
 def create_connection():
-    return mysql.connector.connect(**db_config)
+    return mysql.connector.connect(**c.Config.db_config)
 
 # MySQL veritabanından veri almak için fonksiyon
 # TODO Bu get_data versiyonu silinecek 
