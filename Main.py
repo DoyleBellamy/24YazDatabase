@@ -24,62 +24,39 @@ def main_page():
 
     mail = st.text_input("Mail Adresi", key="login_email")
     sifre = st.text_input("Şifre", type="password", key="login_password")
-    
-    col1, col2, col3 = st.columns(3)
-    
+    rol = ""
+    col1, col2 = st.columns(2)
     with col1:
-        if st.button("Hasta Girişi"):
-            query =  "SELECT * FROM bil372_project.kullanıcı where email = '{}' and şifre = '{}' and rol ='{}'".format(mail, sifre,"kullanıcı")
-            data = get_data(query)
-            
-            if data is not None and not data.empty:
-                st.session_state.kullanıcı_id = data.iloc[0]['KullanıcıID'] 
-                st.session_state.rol = 'Kullanici'
+        if st.button("Giriş"):
+                query =  "SELECT * FROM bil372_project.kullanıcı where email = '{}' and şifre = '{}'".format(mail, sifre)
+                data = get_data(query)
+                print(query)
+                print(data)
+                if data is not None and not data.empty:
+                    st.session_state.kullanıcı_id = data.iloc[0]['KullanıcıID'] 
+                    rol=st.session_state.rol = data.iloc[0]['Rol']
 
-                st.session_state.prev_page = st.session_state.page
-                st.session_state.page = "User Main"
-                st.rerun()
-            else:
-                st.write("Kullanıcı bulunamadı veya yanlış giriş bilgileri.")
-
+                    st.session_state.prev_page = st.session_state.page
+                    if(rol=="kullanıcı"):
+                        st.session_state.page = "User Main"
+                    elif(rol=="admin"):
+                        st.session_state.page = "Admin Main"
+                    elif(rol=="veteriner"):
+                        st.session_state.page = "Veterinarian Main"
+                    else:
+                        st.error("Hatalı veritabanı verisi")
+                    st.rerun()
+                else:
+                    st.write(data)
+                    st.write(query)
+                    st.write("Kullanıcı bulunamadı veya yanlış giriş bilgileri.")
+        
 
     with col2:
-        if st.button("Admin Giriş"):
-            query =  "SELECT * FROM bil372_project.kullanıcı where email = '{}' and şifre = '{}' and rol ='{}'".format(mail, sifre,"admin")
-            data = get_data(query)   
-            if data is not None and not data.empty:
-                st.session_state.admin_id = data.iloc[0]['KullanıcıID'] 
-                st.session_state.rol = 'Admin'
-
-                st.session_state.prev_page = st.session_state.page
-                st.session_state.page = "Admin Main"
-                st.rerun()
-            else:
-                st.write("Admin bulunamadı veya yanlış giriş bilgileri.")
-
-            
-    
-    with col3:
-        if st.button("Veteriner Hekim Giriş"):
-            query =  "SELECT * FROM bil372_project.kullanıcı where email = '{}' and şifre = '{}' and rol ='{}'".format(mail, sifre,"veteriner")
-            data = get_data(query)
-            
-            if data is not None and not data.empty:
-                st.session_state.veteriner_id = data.iloc[0]['KullanıcıID'] 
-                st.session_state.rol = 'Veteriner'
-
-                st.session_state.prev_page = st.session_state.page
-                st.session_state.page = "Veterinarian Main"
-                st.rerun()
-            else:
-                st.write("Veteriner bulunamadı veya yanlış giriş bilgileri.")
-
-            
-
-    if st.button("Kayıt Ol"):
-        st.session_state.prev_page = st.session_state.page
-        st.session_state.page = "Register"
-        st.rerun()
+        if st.button("Kayıt Ol"):
+            st.session_state.prev_page = st.session_state.page
+            st.session_state.page = "Register"
+            st.rerun()
 
 # Kayıt ol sayfası fonksiyonu
 # TODO bu kısmın sıralaması duzeni biraz degisebilir
