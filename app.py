@@ -49,7 +49,7 @@ def main_page():
 
                 st.session_state.prev_page = st.session_state.page
                 st.session_state.page = "User Main"
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.write("Kullanıcı bulunamadı veya yanlış giriş bilgileri.")
 
@@ -64,7 +64,7 @@ def main_page():
 
                 st.session_state.prev_page = st.session_state.page
                 st.session_state.page = "Admin Main"
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.write("Admin bulunamadı veya yanlış giriş bilgileri.")
 
@@ -81,7 +81,7 @@ def main_page():
 
                 st.session_state.prev_page = st.session_state.page
                 st.session_state.page = "Veterinarian Main"
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.write("Veteriner bulunamadı veya yanlış giriş bilgileri.")
 
@@ -90,7 +90,7 @@ def main_page():
     if st.button("Kayıt Ol"):
         st.session_state.prev_page = st.session_state.page
         st.session_state.page = "Register"
-        st.experimental_rerun()
+        st.rerun()
 
 # Kayıt ol sayfası fonksiyonu
 # TODO bu kısmın sıralaması duzeni biraz degisebilir
@@ -98,7 +98,7 @@ def register_page():
     st.title("Kullanıcı Kayıt Ol")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
     mail = st.text_input("Mail Adresi", key="register_email")
     sifre = st.text_input("Şifre", type="password", key="register_password")
     isim = st.text_input("İsim", key="register_name")
@@ -128,7 +128,7 @@ def register_page():
 
         st.session_state.prev_page = st.session_state.page
         st.session_state.page = "Ana Sayfa"
-        st.experimental_rerun()
+        st.rerun()
 
 # TODO DEĞİŞTİRDİ OLARAK GÖSTERİYOR TÜM IFLERI GEÇİYOR ANCAK get_data ÇAĞRILDIĞINDA ESKİ ŞİFRE GÖZÜKÜYOR
 # Şifre değiştirme sayfası
@@ -213,20 +213,20 @@ def user_main_page():
         if st.button("Hayvan Ekle"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Add Animal"
-            st.experimental_rerun()
+            st.rerun()
     with col2:
         # TODO Bu kısım eklenecek. Hem bilgilerini görecek ve update de edebilmesi lazım
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Info Page"
-            st.experimental_rerun()
+            st.rerun()
     with col3:
         # TODO Burada checkbox ile seçilen 1 tane hayvan için randevu alacagiz
         # TODO Secili herhangi bir hayvan yoksa randevu ala bastığı durumda hata vericez
         if st.button("Randevu Al"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Book Appointment"
-            st.experimental_rerun()
+            st.rerun()
 
     st.markdown("<br><br><br><br>", unsafe_allow_html=True)  # Add some space before the larger button
 
@@ -234,14 +234,14 @@ def user_main_page():
     if st.button("Geçmiş Randevularım", key="large_button", help="Geçmiş Randevuları Görüntüle", use_container_width=True):
         st.session_state.prev_page = st.session_state.page
         st.session_state.page = "Past Appointments"
-        st.experimental_rerun()
+        st.rerun()
 
 # Geçmiş randevular sayfası fonksiyonu
 def past_appointments_page():
     st.title("Geçmiş Randevular")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
     st.write("Geçmiş Randevu, Review, Fatura Bilgileri, Reçete")
 
 # Kullanıcı bilgileri sayfası fonksiyonu
@@ -249,7 +249,7 @@ def user_info_page():
     st.title("Bilgilerim")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
     st.write("Doktor ve Uygun Saatler Listesi")
 
 # Hayvan ekle sayfası fonksiyonu
@@ -259,7 +259,7 @@ def add_animal_page():
     
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
 
     hayvan_isim = st.text_input("İsim")
     hayvan_kilo = st.number_input("Kilo", min_value=0.0, step=0.1)
@@ -300,7 +300,7 @@ def book_appointment_page():
     st.title("Randevu Al")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
     st.write("Doktor ve Uygun Saatler Listesi")
     if st.button("Randevu Al"):
         # Placeholder for booking an appointment
@@ -315,17 +315,17 @@ def admin_main_page():
         if st.button("Veteriner Hekim Ekle"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Add Veterinarian"
-            st.experimental_rerun()
+            st.rerun()
     with col2:
         if st.button("İlaç Ekle"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Add Medicine"
-            st.experimental_rerun()
+            st.rerun()
     with col3:
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Admin Info"
-            st.experimental_rerun()
+            st.rerun()
 
 # Veteriner hekim ekle sayfası fonksiyonu
 
@@ -346,7 +346,7 @@ def add_veterinarian_page():
     st.title("Veteriner Hekim Ekle")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
     veteriner_isim = st.text_input("İsim")
     veteriner_soyisim = st.text_input("Soyisim")
     
@@ -369,7 +369,7 @@ def add_veterinarian_page():
 
     if st.button("Geç"):
         st.session_state.page = "Veterinarian Add Times Avaliable"
-        st.experimental_rerun()
+        st.rerun()
     if st.button("Ekle"):
         veteriner_id = get_highest_id('veteriner', 'KullanıcıID') + 1
 
@@ -390,7 +390,7 @@ def add_veterinarian_page():
 
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Veterinarian Add Times Avaliable"
-            st.experimental_rerun()
+            st.rerun()
 
         # Veteriner Eklenmeyince Error ver
         else:
@@ -443,7 +443,7 @@ def add_veterinarian_avaliable_time_page():
             insert_data(insert_query_veteriner_uygunluk, params)
 
         st.session_state.page = "Admin Main"
-        st.experimental_rerun()
+        st.rerun()
 
     #TODO Burada gunlerin hepsini secmek icin olan kod eklenecek
     # 5 tane butonla bunu halledecegiz ama sonraki is 
@@ -467,7 +467,7 @@ def admin_info_page():
     st.title("Bilgilerim")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -496,7 +496,7 @@ def veterinarian_info_page():
     st.title("Bilgilerim")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -524,7 +524,7 @@ def veterinarian_info_page():
         if st.button("Şifreyi Değiştir"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Change Password"
-            st.experimental_rerun()
+            st.rerun()
 
 # Veteriner ana sayfa fonksiyonu
 def veterinarian_main_page():
@@ -535,24 +535,24 @@ def veterinarian_main_page():
         if st.button("Reçete Yaz"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Write Prescription"
-            st.experimental_rerun()
+            st.rerun()
     with col2:
         if st.button("Geçmiş Hastalar"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Past Patients"
-            st.experimental_rerun()
+            st.rerun()
     with col3:
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Info Page"
-            st.experimental_rerun()
+            st.rerun()
 
 # Reçete yaz sayfası fonksiyonu
 def write_prescription_page():
     st.title("Reçete Yaz")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
     st.selectbox("Hastalar", options=["Hasta 1", "Hasta 2"])  # Placeholder options
     col1, col2 = st.columns(2)
     with col1:
@@ -568,7 +568,7 @@ def past_patients_page():
     st.title("Geçmiş Hastalar")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
     st.write("Geçmiş Hastalar Listesi (Hastayı seçer, geçmiş bilgiler görüntülenir)")
 
 # Başlangıçta session state'i ayarla
