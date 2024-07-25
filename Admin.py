@@ -55,9 +55,12 @@ def add_veterinarian_page():
 
     # Telefon Numarası
     #veteriner_telno = st.number_input("Telefon Numarası", value=None, format="%.0f", placeholder="5__")
-    veteriner_telno ="0"+ st.text_input("Telefon Numarası")
+    veteriner_telno =st.text_input("Telefon Numarası")
+    # Sorun çıkarabilir değiştirme durumunda
+    veteriner_telno = "0" + veteriner_telno
     if veteriner_telno and not g.is_valid_tel(veteriner_telno):
         st.error("Geçersiz telefon numarası.")
+        
 
     
     
@@ -99,18 +102,21 @@ def add_veterinarian_page():
                 saat_idler_temp = get_data(query=saatler_query, params=params)
                 birinci_sutun_degerleri = saat_idler_temp.iloc[:, 0].tolist()
                 tum_idler.extend(birinci_sutun_degerleri)            
-            print("tüm idler")
-            print(tum_idler)
-            print("true valıues")
-            print(true_values)
-            print("saat idler temp")
-            print(saat_idler_temp)
+            #print("tüm idler")
+            #print(tum_idler)
+            #print("true valıues")
+            #print(true_values)
+            #print("saat idler temp")
+            #print(saat_idler_temp)
             
             
     #if st.button("Geç"):
     #    st.session_state.page = "Veterinarian Add Times Avaliable"
     #    st.rerun()
     if st.button("Ekle"):
+        
+        # Veteriner Kullanıcının childı olduğu için önce Kullanıcı entitysi insert edip sonra buna bağlı bir veteriner entitysi yaratmak gerekiyor
+
         veteriner_id = int(get_highest_id('kullanıcı', 'KullanıcıID')) + 1
 
         insert_query_veteriner = """
