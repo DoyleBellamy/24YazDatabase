@@ -30,18 +30,21 @@ def main_page():
         if st.button("Giriş"):
                 query =  "SELECT * FROM bil372_project.kullanıcı where email = '{}' and şifre = '{}'".format(mail, sifre)
                 data = get_data(query)
-                print(query)
-                print(data)
+
                 if data is not None and not data.empty:
-                    st.session_state.kullanıcı_id = data.iloc[0]['KullanıcıID'] 
+                    #st.session_state.kullanıcı_id = data.iloc[0]['KullanıcıID'] 
+                    id = data.iloc[0]['KullanıcıID']
                     rol=st.session_state.rol = data.iloc[0]['Rol']
 
                     st.session_state.prev_page = st.session_state.page
                     if(rol=="kullanıcı"):
+                        st.session_state.kullanıcı_id = data.iloc[0]['KullanıcıID']
                         st.session_state.page = "User Main"
                     elif(rol=="admin"):
+                        st.session_state.admin_id = data.iloc[0]['KullanıcıID']
                         st.session_state.page = "Admin Main"
                     elif(rol=="veteriner"):
+                        st.session_state.veteriner_id = data.iloc[0]['KullanıcıID']
                         st.session_state.page = "Veterinarian Main"
                     else:
                         st.error("Hatalı veritabanı verisi")

@@ -11,12 +11,14 @@ from ilacEkleme import add_medicine_page
 
 # Yardımcı fonksiyonlar
 def is_valid_tc(input_value):
-    input_value = int(input_value)
-    return len(str(input_value)) == 11
+    #İnteger olarak alınca hata veriyor
+    #input_value = int(input_value)
+    #return len(str(input_value)) == 11
+    return not bool(re.search('[A-Z]|[a-z]|[öÖİŞşĞğçÇIıüÜ]', input_value)) and len(input_value) == 11
 
 def is_valid_tel(input_value):
-    input_value = int(input_value)
-    return len(str(input_value)) == 10
+    #input_value = int(input_value)
+    return not bool(re.search('[A-Z]|[a-z]|[öÖİŞşĞğçÇIıüÜ]', input_value)) and len(input_value) == 11
 
 # TODO DEĞİŞTİRDİ OLARAK GÖSTERİYOR TÜM IFLERI GEÇİYOR ANCAK get_data ÇAĞRILDIĞINDA ESKİ ŞİFRE GÖZÜKÜYOR
 # Şifre değiştirme sayfası
