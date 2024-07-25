@@ -114,10 +114,19 @@ def add_veterinarian_page():
     #    st.session_state.page = "Veterinarian Add Times Avaliable"
     #    st.rerun()
     if st.button("Ekle"):
-        
-        # Veteriner Kullanıcının childı olduğu için önce Kullanıcı entitysi insert edip sonra buna bağlı bir veteriner entitysi yaratmak gerekiyor
 
+        # Veteriner Kullanıcının childı olduğu için önce Kullanıcı entitysi insert edip sonra buna bağlı bir veteriner entitysi yaratmak gerekiyor
+        # IDyi get_highest_id yerine Kullanıcı insert ettikten sonra emaile göre bulursak daha doğru olur
         veteriner_id = int(get_highest_id('kullanıcı', 'KullanıcıID')) + 1
+        print("vet_id")
+        print(veteriner_id)
+        # Kullanıcı için insert
+        insert_query_kullanıcı = """
+        INSERT INTO kullanıcı (Email, Şifre, Rol)
+        VALUES (%s,%s, %s)
+        """
+        params1 = (None,None,"veteriner")
+        insert_data(insert_query_kullanıcı,params1)
 
         insert_query_veteriner = """
         INSERT INTO veteriner (KullanıcıID,İsim, Soyisim, TCNO, TelefonNo, İlçe, Mahalle, İl, OdaNO, AdminID)
@@ -126,9 +135,9 @@ def add_veterinarian_page():
         print("admin id")
         print(st.session_state.admin_id)
         #params = (str(veteriner_id), veteriner_isim, veteriner_soyisim, veteriner_tcno, str(veteriner_telno), veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
-        params = (veteriner_id,veteriner_isim, veteriner_soyisim, veteriner_tcno, str(veteriner_telno), veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
+        params2 = (veteriner_id,veteriner_isim, veteriner_soyisim, veteriner_tcno, str(veteriner_telno), veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
 
-        insert_data(insert_query_veteriner, params)
+        insert_data(insert_query_veteriner, params2)
 
         query =  "SELECT * FROM bil372_project.veteriner where KullanıcıID = '{}'".format(veteriner_id)
         data = get_data(query)
