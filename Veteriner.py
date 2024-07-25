@@ -33,6 +33,33 @@ def veterinarian_main_page():
             st.rerun()
 
 def veterinarian_info_page():
+
+    # Veteriner bilgilerini getir
+    veteriner_info_query ="""
+    SELECT * FROM veteriner INNER JOIN kullanıcı on kullanıcı.KullanıcıID = veteriner.KullanıcıID WHERE veteriner.KullanıcıID = '{}'
+    """.format(st.session_state.veteriner_id)
+    vet_info = get_data(veteriner_info_query)
+    
+    # Queryden gelen datadan ilgili bilgileri çek
+    email_adresi = vet_info.iloc[0]['Email']
+    isim = vet_info.iloc[0]['İsim']
+    soyisim = vet_info.iloc[0]['Soyisim']
+    tc_kimlik_no = vet_info.iloc[0]['TCNO']
+    # Backendden 11 haneli telefon numarası geliyor fakat biz 10 haneli telefon numarası kontrolu yapıyoruz
+    # bundan dolayı telefonun ilk hanesi olan 0 çıkarılarak telefona atanıyor.
+    tel = vet_info.iloc[0]['TelefonNo']
+    telefon = tel[1:len(tel)]
+    ilce =vet_info.iloc[0]['İlçe']
+    mah = vet_info.iloc[0]['Mahalle']
+    il = vet_info.iloc[0]['İl']
+
+    user_info_query = """
+    Select * From kullanıcı where KullanıcıID = '{}'
+    """.format(st.session_state.veteriner_id)
+    user_info = get_data(user_info_query)
+
+    email = user_info.iloc[0]['Email']
+
     st.title("Bilgilerim")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
@@ -40,19 +67,22 @@ def veterinarian_info_page():
 
     col1, col2 = st.columns(2)
     with col1:
-        isim = st.text_input("İsim")
-        soyisim = st.text_input("Soyisim")
-        tc_kimlik_no = st.number_input("TC Kimlik No", value=None, format="%.0f")
+        isim = st.text_input("İsim", value = isim)
+        soyisim = st.text_input("Soyisim", value = soyisim)
+        tc_kimlik_no = st.text_input("TC Kimlik No", value = tc_kimlik_no)    
         if tc_kimlik_no and not g.is_valid_tc(tc_kimlik_no):
             st.error("TC kimlik numarası 11 haneli olmalıdır.")
+        ilce = st.text_input("İlce", value = ilce)
 
     with col2:
-        email_adresi = st.text_input("E-Mail Adresi")
-        telefon = st.number_input("Telefon Numarası", value=None, format="%.0f", placeholder="5__")
+        email_adresi = st.text_input("E-Mail Adresi", value = email_adresi)
+        telefon = st.text_input("Telefon Numarası", placeholder="5__",value = telefon)
         if telefon and not g.is_valid_tel(telefon):
             st.error("Geçersiz telefon numarası.")
-        adres = st.text_input("Adres")
-    
+        #adres = st.text_input("Adres")
+        il = st.text_input("İl", value = il)
+        mah = st.text_input("Mahalle", value = mah)
+
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Kaydet"):

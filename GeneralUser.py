@@ -18,6 +18,7 @@ def is_valid_tel(input_value):
 
 # TODO DEĞİŞTİRDİ OLARAK GÖSTERİYOR TÜM IFLERI GEÇİYOR ANCAK get_data ÇAĞRILDIĞINDA ESKİ ŞİFRE GÖZÜKÜYOR
 # Şifre değiştirme sayfası
+# Diğer roller tarafından da kullanılabilecek bir fonksiyon olduğu için general user dosyasına alındı
 def change_password_page():
     st.title("Şifre Değiştir")
     current_password = st.text_input("Mevcut Şifre", type="password")
