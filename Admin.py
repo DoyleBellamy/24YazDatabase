@@ -34,7 +34,7 @@ def admin_main_page():
             st.rerun()
 
 # Veteriner hekim ekle sayfası fonksiyonu
-
+# TODO yeni bir veteriner ve kullanıcı entitysi yarattığımız için rol ve email inputları da alınmalı
 # TODO Burada hem Veteriner bilgilerinin alındığından hem de uygundur ilişkisi üzerinden saatlerle bağlı olduğundan emin olmalıyız
 # TODO Burada uygunluk saatlerini eklemeyeceğiz. Sonraki sayfada bunu yapacağız
 # Yapılmadıysa kontrol edilmeli
@@ -54,23 +54,18 @@ def add_veterinarian_page():
         st.error("TC Kimlik Numarası 11 haneli bir sayı olmalıdır.")
 
     # Telefon Numarası
-    #veteriner_telno = st.number_input("Telefon Numarası", value=None, format="%.0f", placeholder="5__")
     veteriner_telno =st.text_input("Telefon Numarası")
-    # Sorun çıkarabilir değiştirme durumunda
-    veteriner_telno = "0" + veteriner_telno
     if veteriner_telno and not g.is_valid_tel(veteriner_telno):
         st.error("Geçersiz telefon numarası.")
-        
 
-    
     
     veteriner_sehir = st.text_input("Şehir")
     veteriner_ilce =st.text_input("İlçe")
     veteriner_mahalle =st.text_input("Mahalle")
     veteriner_odano =st.text_input("Oda Numarası")
-
+    # Uygun saat idleri her yerden ulaşılır olması lazım add_veterinarian_page içinde
+    tum_idler = []
     with st.popover("Veteriner haftalık çalışma saatler"):
-        #st.title("Veteriner Uygunluk Süreleri Ekleme")
         df = pd.DataFrame(
         [   
         { "09.00": False, "10.00": False, "11.00": False, "13.00": False, "14.00": False, "15.00": False, "16.00": False, "17.00": False},
@@ -81,45 +76,28 @@ def add_veterinarian_page():
         ],index=["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
         )
         calendar_data_modified = st.data_editor(df)
-        print(calendar_data_modified)
         
-        #TODO uygunluk saati boşken de kabul olucak şekilde kaydetmeye 2 farklı senaryo eklenicek
         #Uygunluk saatleri tüm idlerde tutuluyor ve veteriner ekleme işlemi bitirildikten sonra tcnoya göre veteriner idsi bulunup uygunluk saati
         #insert ediliyor
-        tum_idler = []
-        if st.button("Uygunluk Sürelerini Kaydet", key="large_button", use_container_width=True):
-        # st.session_state.prev_page = st.session_state.page
-            true_values = [(row, col) for row in df.index for col in calendar_data_modified.columns if calendar_data_modified.at[row, col] == True]
+        true_values = [(row, col) for row in df.index for col in calendar_data_modified.columns if calendar_data_modified.at[row, col] == True]
             
-            for day, time in true_values:
-                formatted_time = format_time(time)
-                #TODO ekle tuşuna basınca olması gerekiyor veteriner eklenmeden bu eklenemez
-                saatler_query = """
-                SELECT SaatID FROM bil372_project.saatler
-                WHERE Saat = %s and Gün = %s;
-                """
-                params = (formatted_time, day)
-                saat_idler_temp = get_data(query=saatler_query, params=params)
-                birinci_sutun_degerleri = saat_idler_temp.iloc[:, 0].tolist()
-                tum_idler.extend(birinci_sutun_degerleri)            
-            #print("tüm idler")
-            #print(tum_idler)
-            #print("true valıues")
-            #print(true_values)
-            #print("saat idler temp")
-            #print(saat_idler_temp)
+        for day, time in true_values:
+            formatted_time = format_time(time)
+            saatler_query = """
+            SELECT SaatID FROM bil372_project.saatler
+            WHERE Saat = %s and Gün = %s;
+            """
+            params = (formatted_time, day)
+            saat_idler_temp = get_data(query=saatler_query, params=params)
+            birinci_sutun_degerleri = saat_idler_temp.iloc[:, 0].tolist()
+            tum_idler.extend(birinci_sutun_degerleri)            
             
-            
-    #if st.button("Geç"):
-    #    st.session_state.page = "Veterinarian Add Times Avaliable"
-    #    st.rerun()
     if st.button("Ekle"):
 
         # Veteriner Kullanıcının childı olduğu için önce Kullanıcı entitysi insert edip sonra buna bağlı bir veteriner entitysi yaratmak gerekiyor
         # IDyi get_highest_id yerine Kullanıcı insert ettikten sonra emaile göre bulursak daha doğru olur
         veteriner_id = int(get_highest_id('kullanıcı', 'KullanıcıID')) + 1
-        print("vet_id")
-        print(veteriner_id)
+        
         # Kullanıcı için insert
         insert_query_kullanıcı = """
         INSERT INTO kullanıcı (Email, Şifre, Rol)
@@ -128,38 +106,37 @@ def add_veterinarian_page():
         params1 = (None,None,"veteriner")
         insert_data(insert_query_kullanıcı,params1)
 
+        #Veteriner için insert
         insert_query_veteriner = """
         INSERT INTO veteriner (KullanıcıID,İsim, Soyisim, TCNO, TelefonNo, İlçe, Mahalle, İl, OdaNO, AdminID)
         VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        print("admin id")
-        print(st.session_state.admin_id)
-        #params = (str(veteriner_id), veteriner_isim, veteriner_soyisim, veteriner_tcno, str(veteriner_telno), veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
-        params2 = (veteriner_id,veteriner_isim, veteriner_soyisim, veteriner_tcno, str(veteriner_telno), veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
+        params2 = (veteriner_id,veteriner_isim, veteriner_soyisim, veteriner_tcno, ("0"+veteriner_telno), veteriner_ilce, veteriner_mahalle, veteriner_sehir, veteriner_odano, str(st.session_state.admin_id))
 
         insert_data(insert_query_veteriner, params2)
 
         query =  "SELECT * FROM bil372_project.veteriner where KullanıcıID = '{}'".format(veteriner_id)
         data = get_data(query)
+
+        #Varsa saat Uygunluklarını ekle
         if (tum_idler ):
             insert_query_veteriner_uygunluk = """
                 INSERT INTO uygundur (SaatID, VeterinerID)
                 VALUES (%s, %s)
                     """
             for saat_id in tum_idler:
-                params = (str(saat_id), str(st.session_state.veteriner_id))
+                params = (str(saat_id), veteriner_id)
                 insert_data(insert_query_veteriner_uygunluk, params)
         # Veteriner Ekleninceki senaryo
         if data is not None and not data.empty:
-            #st.session_state.veteriner_id_added = data.iloc[0]['KullanıcıID'] 
-
             st.session_state.prev_page = st.session_state.page
-            #st.session_state.page = "Veterinarian Add Times Avaliable"
+            st.session_state.page = "Admin Main"
             st.rerun()
 
         # Veteriner Eklenmeyince Error ver
         else:
             st.error("Girdiğiniz Bilgilerde Hata var tekrar kontrol edin")
+        
 
 # Burada havali bir tablo olacak
 # TODO BURADA 1 tur uygunluk eklendi deyip sonrasında pop-up ile sonrasında bu popup'dan ilerle deyince admin sayfasına geçme işlemi gerçekleştirilebilir.
