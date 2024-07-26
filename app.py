@@ -63,3 +63,5 @@ elif st.session_state.page == "Change Password":
     GeneralUser.change_password_page()
 elif st.session_state.page == "User Change Password":
     User.user_change_password_page()
+elif st.session_state.page == "Veterinarian Change Password":
+    Veteriner.veterinarian_change_password_page()
