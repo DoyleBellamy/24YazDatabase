@@ -5,6 +5,7 @@ import re
 from utils import get_data, update_data, get_highest_id, insert_data, format_time
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Veteriner ana sayfa fonksiyonu
 # İçindeki sayfalar:
@@ -15,6 +16,57 @@ import GeneralUser as g
 def veterinarian_main_page():
     st.title("Veteriner Ana Sayfa")
     st.write("Aktif Randevular")
+
+
+    get_query_veteriner_randevular = """
+    SELECT * FROM bil372_project.randevu r
+    Join hayvansahibi hs on hs.kullanıcıID = r.sahipID
+    Join hastahayvan hh on hh.sahipID = hs.kullanıcıID
+    WHERE veterinerID = %s;
+    """
+    params = (str(st.session_state.veteriner_id),)
+
+    data = get_data(get_query_veteriner_randevular, params)
+
+    print(data)
+    if data is not None and not data.empty:
+        # Convert data to a DataFrame
+        df = pd.DataFrame(data)
+        
+        # Remove columns containing 'ID'
+        df = df.loc[:, ~df.columns.str.contains('ID')]
+        columns = df.columns.tolist()
+        for i, col in enumerate(columns):
+            if col == "İsim":
+                columns[i] = "Sahip İsmi"
+                break
+        df.columns = columns
+
+        # Create a GridOptionsBuilder instance
+        gb = GridOptionsBuilder.from_dataframe(df)
+        # Configure selection and layout options
+        gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+        gb.configure_grid_options(domLayout='autoHeight')
+        
+        gridOptions = gb.build()
+
+        # Display the grid with selectable rows
+        grid_response = AgGrid(
+            df,
+            gridOptions=gridOptions,
+            update_mode='MODEL_CHANGED',
+            fit_columns_on_grid_load=True,
+            enable_enterprise_modules=True, 
+            width='100%',
+        )
+
+        selected_rows = grid_response['selected_rows']
+        st.write("Selected Rows")
+        st.write(selected_rows)
+        
+    else:
+        st.write("No active appointments found.")
+
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("Reçete Yaz"):
