@@ -46,6 +46,8 @@ def add_veterinarian_page():
         st.rerun()
     veteriner_isim = st.text_input("İsim")
     veteriner_soyisim = st.text_input("Soyisim")
+    veteriner_email = st.text_input("Email")
+    veteriner_sifre = st.text_input("Şifre")
     
     # TC Kimlik Numarası
     #veteriner_tcno = st.number_input("TC Kimlik Numarası", value=None, format="%.0f")
@@ -103,7 +105,7 @@ def add_veterinarian_page():
         INSERT INTO kullanıcı (Email, Şifre, Rol)
         VALUES (%s,%s, %s)
         """
-        params1 = (None,None,"veteriner")
+        params1 = (veteriner_email,veteriner_sifre,"veteriner")
         insert_data(insert_query_kullanıcı,params1)
 
         #Veteriner için insert
@@ -210,30 +212,48 @@ def add_veterinarian_avaliable_time_page():
 
 # Admin bilgileri sayfası fonksiyonu
 def admin_info_page():
+
+    a_id = st.session_state.admin_id
+
+    # Admin bilgilerini getir
+    admin_info_query ="""
+    SELECT * FROM kullanıcı WHERE KullanıcıID = '{}'
+    """.format(a_id)
+
+    admin_info = get_data(admin_info_query)
+
+    email = admin_info.iloc[0]['Email']
     st.title("Bilgilerim")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
 
-    col1, col2 = st.columns(2)
-    with col1:
-        isim = st.text_input("İsim")
-        soyisim = st.text_input("Soyisim")
-        tc_kimlik_no = st.number_input("TC Kimlik No", value=None, format="%.0f")
-        if tc_kimlik_no and not g.is_valid_tc(tc_kimlik_no):
-            st.error("TC kimlik numarası 11 haneli olmalıdır.")
-
-    with col2:
-        email_adresi = st.text_input("E-Mail Adresi")
-        telefon = st.number_input("Telefon Numarası", value=None, format="%.0f", placeholder="5__")
-        if telefon and not g.is_valid_tel(telefon):
-            st.error("Geçersiz telefon numarası.")
-        adres = st.text_input("Adres")
+    email = st.text_input("Email", value = email)
     
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Kaydet"):
-            if g.is_valid_tc(tc_kimlik_no) and g.is_valid_tel(telefon):
-                st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
+
+            update_admin_query = """
+            UPDATE kullanıcı SET Email = %s WHERE KullanıcıID = %s
+            """
+            params = email, int( a_id)
+
+            try:
+               data1 = update_data(update_admin_query,params)
+            except:
+                st.error("Email adresiniz değiştirilirken bir hata oluştu.")
             else:
-                st.error("Lütfen bilgileri doğru formatta girin.")
+                st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
+    with col2:
+        if st.button("Şifreyi Değiştir"):
+            st.session_state.prev_page = st.session_state.page
+            st.session_state.page = "Admin Change Password"
+            st.rerun()
+
+def admin_change_password_page():
+    g.change_password_page(st.session_state.admin_id)
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.session_state.prev_page = "Admin Main"
+        st.rerun()

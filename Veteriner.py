@@ -80,7 +80,7 @@ def veterinarian_main_page():
     with col3:
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Info Page"
+            st.session_state.page = "Veterinarian Info"
             st.rerun()
 
 def veterinarian_info_page():
@@ -103,13 +103,7 @@ def veterinarian_info_page():
     ilce =vet_info.iloc[0]['İlçe']
     mah = vet_info.iloc[0]['Mahalle']
     il = vet_info.iloc[0]['İl']
-
-    user_info_query = """
-    Select * From kullanıcı where KullanıcıID = '{}'
-    """.format(st.session_state.veteriner_id)
-    user_info = get_data(user_info_query)
-
-    email = user_info.iloc[0]['Email']
+    oda = vet_info.iloc[0]['OdaNO']
 
     st.title("Bilgilerim")
     if st.button("Geri"):
@@ -120,32 +114,63 @@ def veterinarian_info_page():
     with col1:
         isim = st.text_input("İsim", value = isim)
         soyisim = st.text_input("Soyisim", value = soyisim)
-        tc_kimlik_no = st.text_input("TC Kimlik No", value = tc_kimlik_no)    
+        # TC kimlik numarasını görebilsin fakat değiştiremesin
+        tc_kimlik_no = st.text_input("TC Kimlik No", value = tc_kimlik_no, disabled = True)    
         if tc_kimlik_no and not g.is_valid_tc(tc_kimlik_no):
             st.error("TC kimlik numarası 11 haneli olmalıdır.")
-        ilce = st.text_input("İlce", value = ilce)
+        il = st.text_input("İl", value = il)
+        mah = st.text_input("Mahalle", value = mah)
+        
 
     with col2:
         email_adresi = st.text_input("E-Mail Adresi", value = email_adresi)
         telefon = st.text_input("Telefon Numarası", placeholder="5__",value = telefon)
         if telefon and not g.is_valid_tel(telefon):
             st.error("Geçersiz telefon numarası.")
-        #adres = st.text_input("Adres")
-        il = st.text_input("İl", value = il)
-        mah = st.text_input("Mahalle", value = mah)
+        oda = st.text_input("Oda Numarası", value = oda, disabled = True)
+        ilce = st.text_input("İlce", value = ilce)
+        
 
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Kaydet"):
-            if g.is_valid_tc(tc_kimlik_no) and g.is_valid_tel(telefon):
-                st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
+            v_id = st.session_state.veteriner_id
+
+            update_kul_query = """
+            UPDATE kullanıcı SET Email = %s WHERE KullanıcıID = %s
+            """
+            params1 = email_adresi, int( v_id)
+
+            update_sahip_query = """
+            UPDATE veteriner SET İsim = %s, Soyisim = %s, TelefonNo = %s, İl = %s, İlçe = %s, Mahalle = %s WHERE KullanıcıID = %s
+            """ 
+
+            params2 = isim, soyisim,("0"+telefon), il, ilce, mah,int( v_id)
+
+            print("Here we go!")
+            try:
+               data1 = update_data(update_kul_query,params1)
+            except:
+                st.error("Email adresiniz değiştirilirken bir hata oluştu.")
+            try:
+                data2 = update_data(update_sahip_query,params2)
+            except:
+                st.error("Hesap bilgileriniz değiştirilirken bir hata oluştu")
             else:
-                st.error("Lütfen bilgileri doğru formatta girin.")
+                st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
+
     with col2:
         if st.button("Şifreyi Değiştir"):
             st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Change Password"
+            st.session_state.page = "Veterinarian Change Password"
             st.rerun()
+
+def veterinarian_change_password_page():
+    g.change_password_page(st.session_state.veteriner_id)
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.session_state.prev_page = "Veterinarian Main"
+        st.rerun()
 
 # Reçete yaz sayfası fonksiyonu
 def write_prescription_page():
