@@ -147,7 +147,6 @@ def user_info_page():
 
             params2 = isim, soyisim, il, ilce, mah,int( k_id)
 
-            print("Here we go!")
             try:
                 data1 = update_data(update_kul_query,params1)
             except:
@@ -217,7 +216,65 @@ def add_animal_page():
 
 # Randevu al sayfası fonksiyonu
 def book_appointment_page():
+    # Randevu için kullanıcı id ve hayvan id yi kullanarak hayvanın özelliklerini getir
+    h_id = st.session_state.hayvan_id
+    k_id = st.session_state.kullanıcı_id
+
+    hayvan_query = """
+    SELECT * FROM hastahayvan AS h WHERE h.HastaID = '{}' and h.SahipID = '{}'
+    """.format(h_id,k_id)
+
+    data1 = get_data(hayvan_query)
+
+    # Hayvan türüne göre veterinerleri getir ve reviewlerine göre sırala
+    vet_query = """
+        With vet_puanları AS(
+            SELECT v.KullanıcıID AS VetID,v.İsim AS Vetİsim, count(v.KullanıcıID) AS rew_sayısı  ,avg(r.puan) AS avg_p
+            FROM veteriner AS v
+            INNER JOIN reviewverir AS r
+            ON v.KullanıcıID = r.VeterinerID
+            group by(r.VeterinerID)
+            order by avg_p desc
+        )
+        SELECT * 
+        FROM yetkinlik AS y 
+        INNER JOIN vet_puanları AS v 
+        	ON v.VetID = y.VeterinerID 
+        WHERE y.Yetkinlik = '{}'
+        ORDER BY avg_p desc
+    """.format(data1.iloc[0]["Tür"])
+
+    data2 = get_data(vet_query)
+
+    # Sayfa görünümü
     st.title("Randevu Al")
+    if data2 is not None and not data2.empty:
+        st.write("Veterinerler:")
+        
+        # Seçili satırları saklamak için bir liste
+        selected_rows = []
+
+        for index, row in data2.iterrows():
+            vet_data = {
+            "Veteriner İsmi": row["Vetİsim"],
+            "Değerlendirme Sayısı": row["rew_sayısı"],
+            "Puan": row["avg_p"]
+            }
+            # Sütunları oluştur
+            cols = st.columns([1, 3, 1])  # 1: Checkbox için, 5: Satır Bilgisi için, 1: Buton için
+            
+            # Checkbox ve butonları ilgili sütunlara yerleştir
+            with cols[0]:  # Checkbox sütunu
+                checkbox = st.checkbox("", key=f"checkbox_{index}")
+                if checkbox:    
+                    selected_rows.append(index)
+                    # Checkbox seçilince session_state'e hayvan_id ekle
+                    st.session_state.veteriner_id = row["VeterinerID"]
+                    
+            with cols[1]:  # Satır bilgisi sütunu
+                # Her satır için küçük bir tablo oluşturma
+                st.write(pd.DataFrame([vet_data], columns=["Veteriner İsmi","Değerlendirme Sayısı","Puan"]))
+
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
