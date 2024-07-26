@@ -18,6 +18,7 @@ def user_main_page():
     st.title("Kullanıcı Ana Sayfa")
     st.write("Hayvanlar Listesi ve Bilgileri ve Randevu Alma")
 
+    # Kullanıcının hayvanlarını getir
     animal_query = """
     SELECT * FROM bil372_project.hastahayvan
     WHERE SahipID = %s;
@@ -32,14 +33,18 @@ def user_main_page():
         selected_rows = []
 
         for index, row in animals_data.iterrows():
+
             # Sütunları oluştur
             cols = st.columns([1, 5, 1])  # 1: Checkbox için, 5: Satır Bilgisi için, 1: Buton için
             
             # Checkbox ve butonları ilgili sütunlara yerleştir
             with cols[0]:  # Checkbox sütunu
-                if st.checkbox("", key=f"checkbox_{index}"):
+                checkbox = st.checkbox("", key=f"checkbox_{index}")
+                if checkbox:    
                     selected_rows.append(index)
-            
+                    # Checkbox seçilince session_state'e hayvan_id ekle
+                    st.session_state.hayvan_id = row["HastaID"]
+                    
             with cols[1]:  # Satır bilgisi sütunu
                 # Her satır için küçük bir tablo oluşturma
                 st.write(pd.DataFrame([row], columns=animals_data.columns))
