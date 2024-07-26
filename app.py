@@ -57,7 +57,7 @@ elif st.session_state.page == "Past Patients":
     Veteriner.past_patients_page()
 elif st.session_state.page == "Veterinarian Add Times Avaliable":
     Admin.add_veterinarian_avaliable_time_page()
-elif st.session_state.page == "Info Page":
+elif st.session_state.page == "Veterinarian Info":
     Veteriner.veterinarian_info_page()
 elif st.session_state.page == "Change Password":
     GeneralUser.change_password_page()

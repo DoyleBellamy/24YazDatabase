@@ -46,6 +46,8 @@ def add_veterinarian_page():
         st.rerun()
     veteriner_isim = st.text_input("İsim")
     veteriner_soyisim = st.text_input("Soyisim")
+    veteriner_email = st.text_input("Email")
+    veteriner_sifre = st.text_input("Şifre")
     
     # TC Kimlik Numarası
     #veteriner_tcno = st.number_input("TC Kimlik Numarası", value=None, format="%.0f")
@@ -103,7 +105,7 @@ def add_veterinarian_page():
         INSERT INTO kullanıcı (Email, Şifre, Rol)
         VALUES (%s,%s, %s)
         """
-        params1 = (None,None,"veteriner")
+        params1 = (veteriner_email,veteriner_sifre,"veteriner")
         insert_data(insert_query_kullanıcı,params1)
 
         #Veteriner için insert

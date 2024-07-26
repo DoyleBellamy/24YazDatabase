@@ -29,7 +29,7 @@ def veterinarian_main_page():
     with col3:
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Info Page"
+            st.session_state.page = "Veterinarian Info"
             st.rerun()
 
 def veterinarian_info_page():
@@ -52,13 +52,6 @@ def veterinarian_info_page():
     ilce =vet_info.iloc[0]['İlçe']
     mah = vet_info.iloc[0]['Mahalle']
     il = vet_info.iloc[0]['İl']
-
-    user_info_query = """
-    Select * From kullanıcı where KullanıcıID = '{}'
-    """.format(st.session_state.veteriner_id)
-    user_info = get_data(user_info_query)
-
-    email = user_info.iloc[0]['Email']
 
     st.title("Bilgilerim")
     if st.button("Geri"):

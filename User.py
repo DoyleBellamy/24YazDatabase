@@ -4,6 +4,7 @@ import pandas as pd
 import re
 from utils import get_data, update_data, get_highest_id, insert_data, format_time
 from ilacEkleme import add_medicine_page
+import GeneralUser as g
 
 # Kullanıcı ana sayfa fonksiyonu
 # İçindeki sayfalar:
@@ -69,7 +70,7 @@ def user_main_page():
         # TODO Bu kısım eklenecek. Hem bilgilerini görecek ve update de edebilmesi lazım
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Info Page"
+            st.session_state.page = "User Info"
             st.rerun()
     with col3:
         # TODO Burada checkbox ile seçilen 1 tane hayvan için randevu alacagiz
@@ -101,7 +102,63 @@ def user_info_page():
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
-    st.write("Doktor ve Uygun Saatler Listesi")
+    
+    #Kullanıcı bilgilerini getir
+    user_query = """
+    SELECT * FROM hayvansahibi AS h INNER JOIN kullanıcı AS k ON h.KullanıcıID = h.KullanıcıID WHERE k.KullanıcıID = '{}'
+    """.format(st.session_state.kullanıcı_id)
+
+    user_info = get_data(user_query)
+
+    # Queryden gelen datadan ilgili bilgileri çek
+    email_adresi = user_info.iloc[0]['Email']
+    isim = user_info.iloc[0]['İsim']
+    soyisim = user_info.iloc[0]['Soyisim']
+    ilce =user_info.iloc[0]['İlçe']
+    mah = user_info.iloc[0]['Mahalle']
+    il = user_info.iloc[0]['İl']
+
+    col1, col2 = st.columns(2)
+    with col1:
+        isim = st.text_input("İsim", value = isim)
+        soyisim = st.text_input("Soyisim", value = soyisim)
+        ilce = st.text_input("İlce", value = ilce)
+
+    with col2:
+        email_adresi = st.text_input("E-Mail Adresi", value = email_adresi)
+        il = st.text_input("İl", value = il)
+        mah = st.text_input("Mahalle", value = mah)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Kaydet"):
+            k_id = st.session_state.kullanıcı_id
+
+            update_kul_query = """
+            UPDATE kullanıcı SET Email = %s WHERE KullanıcıID = %s
+            """
+            params1 = email_adresi, int( k_id)
+
+            update_sahip_query = """
+            UPDATE hayvansahibi SET İsim = %s, Soyisim = %s, İl = %s, İlçe = %s, Mahalle = %s WHERE KullanıcıID = %s
+            """ 
+
+            params2 = isim, soyisim, il, ilce, mah,int( k_id)
+
+            print("Here we go!")
+            data1 = update_data(update_kul_query,params1)
+            print(data1)
+            data2 = update_data(update_sahip_query,params2)
+            print(data2)
+            if 1:
+                st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
+            else:
+                st.error("Lütfen bilgileri doğru formatta girin.")
+    with col2:
+        if st.button("Şifreyi Değiştir"):
+            st.session_state.prev_page = st.session_state.page
+            st.session_state.page = "Change Password"
+            st.rerun()
 
 # Hayvan ekle sayfası fonksiyonu
 # TODO Bu sayfa da başka değişiklik yapılmayacaksa yeni .py dosyasına geçebilir
