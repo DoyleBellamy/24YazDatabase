@@ -12,7 +12,6 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 #   - veterinarian_main_page
 #   - veterinarian_info_page
 #   - write_prescription_page
-#   - past_patients_page
 def veterinarian_main_page():
     st.title("Veteriner Ana Sayfa")
     st.write("Aktif Randevular")
@@ -63,9 +62,9 @@ def veterinarian_main_page():
         selected_rows = grid_response['selected_rows']
         st.write("Selected Rows")
         st.write(selected_rows)
-        
+
     else:
-        st.write("No active appointments found.")
+        st.write("Randevu Bulunamadı.")
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -74,10 +73,10 @@ def veterinarian_main_page():
             st.session_state.page = "Write Prescription"
             st.rerun()
     with col2:
+        # TODO Burada ismi değişen buton olacak. Aktif'ken sadece aktifler görünecek. Bir daha basınca tümü görünecek. 
+        # Aktiften kasıt randevu tarihinin bugünden sonra olması diyebiliriz direkt
         if st.button("Geçmiş Hastalar"):
-            st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Past Patients"
-            st.rerun()
+            print("dummy")
     with col3:
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
@@ -163,11 +162,3 @@ def write_prescription_page():
     st.text_area("Açıklama")
     if st.button("Reçeteyi Onayla"):
         st.write("Reçete onaylandı!")  # Placeholder for prescription approval
-
-# Geçmiş hastalar sayfası fonksiyonu
-def past_patients_page():
-    st.title("Geçmiş Hastalar")
-    if st.button("Geri"):
-        st.session_state.page = st.session_state.prev_page
-        st.rerun()
-    st.write("Geçmiş Hastalar Listesi (Hastayı seçer, geçmiş bilgiler görüntülenir)")
