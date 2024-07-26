@@ -25,9 +25,6 @@ def user_main_page():
     id_str = str(st.session_state.kullanıcı_id)
     animals_data = get_data(animal_query, (id_str,))
 
-    # TODO silinecek
-    print(animals_data)
-
     if animals_data is not None and not animals_data.empty:
         st.write("Hayvanların Bilgileri:")
 
@@ -146,19 +143,29 @@ def user_info_page():
             params2 = isim, soyisim, il, ilce, mah,int( k_id)
 
             print("Here we go!")
-            data1 = update_data(update_kul_query,params1)
-            print(data1)
-            data2 = update_data(update_sahip_query,params2)
-            print(data2)
-            if 1:
-                st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
+            try:
+                data1 = update_data(update_kul_query,params1)
+            except:
+                st.error("Email adresiniz değiştirilirken bir hata oluştu.")
+            try:
+                data2 = update_data(update_sahip_query,params2)
+            except:
+                st.error("Hesap bilgileriniz değiştirilirken bir hata oluştu")
             else:
-                st.error("Lütfen bilgileri doğru formatta girin.")
+                st.write("Bilgileriniz güncellendi!")  # Placeholder for updating info in the database
+
     with col2:
         if st.button("Şifreyi Değiştir"):
             st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Change Password"
+            st.session_state.page = "User Change Password"
             st.rerun()
+
+def user_change_password_page():
+    g.change_password_page(st.session_state.kullanıcı_id)
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.session_state.prev_page = "User Main"
+        st.rerun()
 
 # Hayvan ekle sayfası fonksiyonu
 # TODO Bu sayfa da başka değişiklik yapılmayacaksa yeni .py dosyasına geçebilir
