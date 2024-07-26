@@ -245,21 +245,25 @@ def book_appointment_page():
     """.format(data1.iloc[0]["Tür"])
 
     data2 = get_data(vet_query)
+    saatler = None
 
     # Sayfa görünümü
     st.title("Randevu Al")
+    st.write("Veterinerler ve Uygun Saatler Listesi")
     if data2 is not None and not data2.empty:
         st.write("Veterinerler:")
-        
+        print(saatler)
         # Seçili satırları saklamak için bir liste
         selected_rows = []
 
         for index, row in data2.iterrows():
+
             vet_data = {
             "Veteriner İsmi": row["Vetİsim"],
             "Değerlendirme Sayısı": row["rew_sayısı"],
             "Puan": row["avg_p"]
             }
+
             # Sütunları oluştur
             cols = st.columns([1, 3, 1])  # 1: Checkbox için, 5: Satır Bilgisi için, 1: Buton için
             
@@ -270,15 +274,25 @@ def book_appointment_page():
                     selected_rows.append(index)
                     # Checkbox seçilince session_state'e hayvan_id ekle
                     st.session_state.veteriner_id = row["VeterinerID"]
+                    if st.session_state.veteriner_id is not None:
+                        saat_query = """
+                        SELECT u.SaatID, u.VeterinerID FROM uygundur AS u 
+                        INNER JOIN veteriner AS v ON v.KullanıcıID=u.VeterinerID 
+                        INNER JOIN saatler AS s ON s.SaatID=u.SaatID
+                        WHERE u.VeterinerID = '{}'
+                        """.format(st.session_state.veteriner_id)
+                        saatler = get_data(saat_query)
+                        print(saatler)
                     
             with cols[1]:  # Satır bilgisi sütunu
                 # Her satır için küçük bir tablo oluşturma
                 st.write(pd.DataFrame([vet_data], columns=["Veteriner İsmi","Değerlendirme Sayısı","Puan"]))
-
+            
+    st.write("Uygun Saatler")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
-    st.write("Doktor ve Uygun Saatler Listesi")
+    
     if st.button("Randevu Al"):
         # Placeholder for booking an appointment
         st.write("Randevu Al Buton")
