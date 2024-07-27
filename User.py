@@ -5,6 +5,7 @@ import re
 from utils import get_data, update_data, get_highest_id, insert_data, format_time
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
+import randevu as r
 
 # Kullanıcı ana sayfa fonksiyonu
 # İçindeki sayfalar:
@@ -287,12 +288,28 @@ def book_appointment_page():
             with cols[1]:  # Satır bilgisi sütunu
                 # Her satır için küçük bir tablo oluşturma
                 st.write(pd.DataFrame([vet_data], columns=["Veteriner İsmi","Değerlendirme Sayısı","Puan"]))
-            
-    st.write("Uygun Saatler")
+    
+    # Başlangıç ve bitiş tarihlerini kullanıcı seçer
+    # Sistem bu tarihler arasında uygun en yakın tarih ve saatli randevuyu oluşturup kullanıcıya tanımlar
+    st.write("Saat aralığı seçiniz")
+    if(saatler is not None and not saatler.empty):
+        cols2 = st.columns(2)
+        with cols2[0]:
+
+            start = st.date_input("Başlangıç:")
+            print(start)
+        with cols2[1]:
+
+            end = st.date_input("Bitiş:")
+            print(end)
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
     
     if st.button("Randevu Al"):
-        # Placeholder for booking an appointment
         st.write("Randevu Al Buton")
+        # Randevu returns a boolean 1 if successfull 0 if failure
+        if(r.randevu(start,end,st.session_state.veteriner_id)):
+            st.success("Randevu başarıyla alındı")
+        else:
+            st.error("Randevu alınırken hata oluştu. Lütfen tekrar deneyiniz")
