@@ -309,7 +309,11 @@ def book_appointment_page():
     if st.button("Randevu Al"):
         st.write("Randevu Al Buton")
         # Randevu returns a boolean 1 if successfull 0 if failure
-        if(r.randevu(start,end,st.session_state.veteriner_id)):
-            st.success("Randevu başarıyla alındı")
-        else:
-            st.error("Randevu alınırken hata oluştu. Lütfen tekrar deneyiniz")
+        r.randevu(start,end)
+        try:
+            print("try")
+            #r.randevu(start,end)
+            #st.success("Randevu başarıyla alındı")
+        except :
+            print("except")
+            #st.error("Randevu alınırken hata oluştu. Lütfen tekrar deneyiniz")
