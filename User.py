@@ -38,6 +38,8 @@ def user_main_page():
             with cols[0]:  # Checkbox sütunu
                 if st.checkbox("", key=f"checkbox_{index}", value=(index == st.session_state.selected_animal_index)):
                     st.session_state.selected_animal_index = index
+                    # Checkbox seçilince session_state'e hayvan_id ekle
+                    st.session_state.hayvan_id = row["HastaID"]
                 elif st.session_state.selected_animal_index == index:
                     st.session_state.selected_animal_index = None
             
@@ -237,14 +239,106 @@ def add_animal_page():
 
 # Randevu al sayfası fonksiyonu
 def book_appointment_page():
+    # Randevu için kullanıcı id ve hayvan id yi kullanarak hayvanın özelliklerini getir
+    h_id = st.session_state.hayvan_id
+    k_id = st.session_state.kullanıcı_id
+
+    hayvan_query = """
+    SELECT * FROM hastahayvan AS h WHERE h.HastaID = '{}' and h.SahipID = '{}'
+    """.format(h_id,k_id)
+
+    data1 = get_data(hayvan_query)
+
+    # Hayvan türüne göre veterinerleri getir ve reviewlerine göre sırala
+    vet_query = """
+        With vet_puanları AS(
+            SELECT v.KullanıcıID AS VetID,v.İsim AS Vetİsim, count(v.KullanıcıID) AS rew_sayısı  ,avg(r.puan) AS avg_p
+            FROM veteriner AS v
+            INNER JOIN reviewverir AS r
+            ON v.KullanıcıID = r.VeterinerID
+            group by(r.VeterinerID)
+            order by avg_p desc
+        )
+        SELECT * 
+        FROM yetkinlik AS y 
+        INNER JOIN vet_puanları AS v 
+        	ON v.VetID = y.VeterinerID 
+        WHERE y.Yetkinlik = '{}'
+        ORDER BY avg_p desc
+    """.format(data1.iloc[0]["Tür"])
+
+    data2 = get_data(vet_query)
+    saatler = None
+
+    # Sayfa görünümü
     st.title("Randevu Al")
+    st.write("Veterinerler ve Uygun Saatler Listesi")
+    if data2 is not None and not data2.empty:
+        st.write("Veterinerler:")
+        print(saatler)
+        # Seçili satırları saklamak için bir liste
+        selected_rows = []
+
+        for index, row in data2.iterrows():
+
+            vet_data = {
+            "Veteriner İsmi": row["Vetİsim"],
+            "Değerlendirme Sayısı": row["rew_sayısı"],
+            "Puan": row["avg_p"]
+            }
+
+            # Sütunları oluştur
+            cols = st.columns([1, 3, 1])  # 1: Checkbox için, 5: Satır Bilgisi için, 1: Buton için
+            
+            # Checkbox ve butonları ilgili sütunlara yerleştir
+            with cols[0]:  # Checkbox sütunu
+                checkbox = st.checkbox("", key=f"checkbox_{index}")
+                if checkbox:    
+                    selected_rows.append(index)
+                    # Checkbox seçilince session_state'e hayvan_id ekle
+                    st.session_state.veteriner_id = row["VeterinerID"]
+                    if st.session_state.veteriner_id is not None:
+                        saat_query = """
+                        SELECT u.SaatID, u.VeterinerID FROM uygundur AS u 
+                        INNER JOIN veteriner AS v ON v.KullanıcıID=u.VeterinerID 
+                        INNER JOIN saatler AS s ON s.SaatID=u.SaatID
+                        WHERE u.VeterinerID = '{}'
+                        """.format(st.session_state.veteriner_id)
+                        saatler = get_data(saat_query)
+                        print(saatler)
+                    
+            with cols[1]:  # Satır bilgisi sütunu
+                # Her satır için küçük bir tablo oluşturma
+                st.write(pd.DataFrame([vet_data], columns=["Veteriner İsmi","Değerlendirme Sayısı","Puan"]))
+    
+    # Başlangıç ve bitiş tarihlerini kullanıcı seçer
+    # Sistem bu tarihler arasında uygun en yakın tarih ve saatli randevuyu oluşturup kullanıcıya tanımlar
+    st.write("Saat aralığı seçiniz")
+    if(saatler is not None and not saatler.empty):
+        cols2 = st.columns(2)
+        with cols2[0]:
+
+            start = st.date_input("Başlangıç:")
+            print(start)
+        with cols2[1]:
+
+            end = st.date_input("Bitiş:")
+            print(end)
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
-    st.write("Doktor ve Uygun Saatler Listesi")
+    
     if st.button("Randevu Al"):
-        # Placeholder for booking an appointment
         st.write("Randevu Al Buton")
+        # Randevu returns a boolean 1 if successfull 0 if failure
+        r.randevu(start,end)
+        try:
+            print("try")
+            #r.randevu(start,end)
+            #st.success("Randevu başarıyla alındı")
+        except :
+            print("except")
+            #st.error("Randevu alınırken hata oluştu. Lütfen tekrar deneyiniz")
 
 def update_animal_page():
     st.title("Hayvan Güncelleme Ekranı")

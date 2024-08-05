@@ -19,6 +19,9 @@ if 'admin_id' not in st.session_state:
 if 'veteriner_id' not in st.session_state:
     st.session_state.veteriner_id = None
 
+if 'hayvan_id' not in st.session_state:
+    st.session_state.hayvan_id = None
+
 
 # Başlangıçta session state'i ayarla
 if 'page' not in st.session_state:
