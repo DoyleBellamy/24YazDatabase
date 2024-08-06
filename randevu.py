@@ -28,6 +28,37 @@ def randevu(start,end):
     """.format(st.session_state.veteriner_id)
     randevular = get_data(vet_randevular)
     print(randevular)
+    """
+    with
+    saatler as(
+    SELECT 
+        u.SaatID, 
+        u.VeterinerID,
+        s.Gün, 
+        STR_TO_DATE(CONCAT('2024-02-25 ', 
+            LPAD(s.Saat, 2, '0'),
+            ':',
+            LPAD(s.Dakika, 2, '0'),
+            ':00'
+        ),'%Y-%m-%d %H:%i:%s')
+         AS Tarih
+        FROM 
+        uygundur u
+        JOIN 
+        saatler s ON u.SaatID = s.SaatID
+        WHERE u.VeterinerID = 6 AND s.Gün = 'Pazartesi'),
+    ran as (
+    SELECT * FROM randevu as r
+    WHERE r.tarih >='2024-02-25 00:00:00'
+    AND r.tarih <'2024-02-26 00:00:00')
+    Select s.VeterinerID, s.Gün, s.Tarih
+    from saatler as s
+    left join ran as r
+    on s.Tarih = r.Tarih
+    where r.Tarih is null
+    order by r.Tarih asc
+    ;
+    """
     # Uygun zamanları getir 
     vet_uygun_q = """
     SELECT 
