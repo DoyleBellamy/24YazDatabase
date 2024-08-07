@@ -50,9 +50,7 @@ def main_page():
                         st.error("Hatalı veritabanı verisi")
                     st.rerun()
                 else:
-                    st.write(data)
-                    st.write(query)
-                    st.write("Kullanıcı bulunamadı veya yanlış giriş bilgileri.")
+                    st.error("Kullanıcı bulunamadı veya yanlış giriş bilgileri.")
         
 
     with col2:
