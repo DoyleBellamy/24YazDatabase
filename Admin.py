@@ -26,12 +26,6 @@ def admin_main_page():
     """
     veterinarians_data = get_data(veterinarians_query)
     
-# delete_query = "DELETE FROM veteriner WHERE KullanıcıID = %s"
-#                             delete_data(delete_query, (row['KullanıcıID'],))
-#                             st.session_state[delete_key] = False  # Reset the state after deletion
-#                             st.rerun()  # Refresh the page to reflect the changes
-
-    
     if veterinarians_data is not None and not veterinarians_data.empty:
         # Convert data to a DataFrame
         df = pd.DataFrame(veterinarians_data)
@@ -56,8 +50,6 @@ def admin_main_page():
         )
 
         selected_rows = grid_response['selected_rows']
-        st.write(selected_rows)
-
 
     col1, col2, col3, col4 = st.columns([6, 4, 4, 6])
     with col1:
