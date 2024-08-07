@@ -69,6 +69,8 @@ def randevu(start,end):
             try:
                 params = str(st.session_state.veteriner_id), str(st.session_state.kullanıcı_id),str(st.session_state.hayvan_id),str(uygun.iloc[0]['Tarih'])
                 insert_data(randevu_olustur,params)
+                print("Randevu başarıyla oluşturuldu:")
+                print(uygun.iloc[0]['Tarih'])
                 success = True
                 st.success("Randevunuz başarıyla oluşturulmuştur.")
             except:
