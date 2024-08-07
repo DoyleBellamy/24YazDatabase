@@ -10,7 +10,7 @@ def add_medicine_page():
     st.title("İlaç Ekle")
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
-        st.experimental_rerun()
+        st.rerun()
     ilac_ad = st.text_input("İlaç Adı")
     ilac_toplam_ucret = st.number_input("Toplam Ücret", value=None, format="%.0f")
     ilac_miktar = st.number_input("Miktar", value=None, format="%.0f")
