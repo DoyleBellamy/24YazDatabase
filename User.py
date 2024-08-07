@@ -6,6 +6,7 @@ from utils import get_data, update_data, get_highest_id, insert_data, format_tim
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
 import randevu as r
+import randevu as r
 
 # Kullanıcı ana sayfa fonksiyonu
 # İçindeki sayfalar:
@@ -19,6 +20,7 @@ def user_main_page():
     st.title("Kullanıcı Ana Sayfa")
     st.write("Hayvanlar Listesi ve Bilgileri ve Randevu Alma")
 
+    # Kullanıcının hayvanlarını getir
     animal_query = """
     SELECT HastaID, İsim, Yaş, Boy, Kilo, Tür, Cinsiyet FROM bil372_project.hastahayvan
     WHERE SahipID = %s;
@@ -33,10 +35,12 @@ def user_main_page():
             st.session_state.selected_animal_index = None
 
         for index, row in animals_data.iterrows():
+
             # Sütunları oluştur
             cols = st.columns([1, 6, 2, 1.2, 3])  
             
             with cols[0]:  # Checkbox sütunu
+
                 if st.checkbox("", key=f"checkbox_{index}", value=(index == st.session_state.selected_animal_index)):
                     st.session_state.selected_animal_index = index
                     # Checkbox seçilince session_state'e hayvan_id ekle
@@ -44,6 +48,7 @@ def user_main_page():
                 elif st.session_state.selected_animal_index == index:
                     st.session_state.selected_animal_index = None
             
+
             with cols[1]:  # Satır bilgisi sütunu
                 # Her satır için küçük bir tablo oluşturma
                 st.write(pd.DataFrame([row], columns=animals_data.columns))
@@ -53,7 +58,7 @@ def user_main_page():
                     st.session_state.selected_animal_id = row['HastaID']
                     st.session_state.prev_page = st.session_state.page
                     st.session_state.page = "update_animal"
-                    st.experimental_rerun()
+                    st.rerun()
             
             with cols[3]:  # Sil Butonu sütunu
                 delete_key = f"confirm_delete_{index}"
@@ -74,11 +79,11 @@ def user_main_page():
                             delete_query = "DELETE FROM bil372_project.hastahayvan WHERE HastaID = %s"
                             delete_data(delete_query, (row['HastaID'],))
                             st.session_state[delete_key] = False
-                            st.experimental_rerun()
+                            st.rerun()
                     with no_col:
                         if st.button("Hayır", key=f"no_{index}"):
                             st.session_state[delete_key] = False
-                            st.experimental_rerun()
+                            st.rerun()
 
         # Alt tarafta Randevu Al butonu
         if st.session_state.selected_animal_index is not None:
@@ -87,7 +92,7 @@ def user_main_page():
                 st.session_state.prev_page = st.session_state.page
                 st.session_state.page = "Book Appointment"
                 st.session_state.selected_animal_id = selected_animal['HastaID']
-                st.experimental_rerun()
+                st.rerun()
         else:
             st.write("Randevu almak için bir hasta seçin.")
 
@@ -170,7 +175,6 @@ def user_info_page():
 
             params2 = isim, soyisim, il, ilce, mah,int( k_id)
 
-            print("Here we go!")
             try:
                 data1 = update_data(update_kul_query,params1)
             except:
@@ -272,6 +276,38 @@ def book_appointment_page():
     saatler = None
 
     # Sayfa görünümü
+    # Randevu için kullanıcı id ve hayvan id yi kullanarak hayvanın özelliklerini getir
+    h_id = st.session_state.hayvan_id
+    k_id = st.session_state.kullanıcı_id
+
+    hayvan_query = """
+    SELECT * FROM hastahayvan AS h WHERE h.HastaID = '{}' and h.SahipID = '{}'
+    """.format(h_id,k_id)
+
+    data1 = get_data(hayvan_query)
+
+    # Hayvan türüne göre veterinerleri getir ve reviewlerine göre sırala
+    vet_query = """
+        With vet_puanları AS(
+            SELECT v.KullanıcıID AS VetID,v.İsim AS Vetİsim, count(v.KullanıcıID) AS rew_sayısı  ,avg(r.puan) AS avg_p
+            FROM veteriner AS v
+            INNER JOIN reviewverir AS r
+            ON v.KullanıcıID = r.VeterinerID
+            group by(r.VeterinerID)
+            order by avg_p desc
+        )
+        SELECT * 
+        FROM yetkinlik AS y 
+        INNER JOIN vet_puanları AS v 
+        	ON v.VetID = y.VeterinerID 
+        WHERE y.Yetkinlik = '{}'
+        ORDER BY avg_p desc
+    """.format(data1.iloc[0]["Tür"])
+
+    data2 = get_data(vet_query)
+    saatler = None
+
+    # Sayfa görünümü
     st.title("Randevu Al")
     st.write("Veterinerler ve Uygun Saatler Listesi")
     if data2 is not None and not data2.empty:
@@ -329,6 +365,7 @@ def book_appointment_page():
         st.session_state.page = st.session_state.prev_page
         st.rerun()
     
+    
     if st.button("Randevu Al"):
         st.write("Randevu Al Buton")
         # Randevu returns a boolean 1 if successfull 0 if failure
@@ -375,3 +412,4 @@ def update_animal_page():
             st.write("Hayvan bilgileri güncellendi!")
     else:
         st.write("Hayvan bilgileri bulunamadı.")
+
