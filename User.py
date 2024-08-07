@@ -55,7 +55,7 @@ def user_main_page():
                     st.session_state.selected_animal_id = row['HastaID']
                     st.session_state.prev_page = st.session_state.page
                     st.session_state.page = "update_animal"
-                    st.experimental_rerun()
+                    st.rerun()
             
             with cols[3]:  # Sil Butonu sütunu
                 delete_key = f"confirm_delete_{index}"
@@ -76,11 +76,11 @@ def user_main_page():
                             delete_query = "DELETE FROM bil372_project.hastahayvan WHERE HastaID = %s"
                             delete_data(delete_query, (row['HastaID'],))
                             st.session_state[delete_key] = False
-                            st.experimental_rerun()
+                            st.rerun()
                     with no_col:
                         if st.button("Hayır", key=f"no_{index}"):
                             st.session_state[delete_key] = False
-                            st.experimental_rerun()
+                            st.rerun()
 
         # Alt tarafta Randevu Al butonu
         if st.session_state.selected_animal_index is not None:
@@ -89,7 +89,7 @@ def user_main_page():
                 st.session_state.prev_page = st.session_state.page
                 st.session_state.page = "Book Appointment"
                 st.session_state.selected_animal_id = selected_animal['HastaID']
-                st.experimental_rerun()
+                st.rerun()
         else:
             st.write("Randevu almak için bir hasta seçin.")
 

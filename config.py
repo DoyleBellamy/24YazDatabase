@@ -4,7 +4,7 @@
 class Config:
     db_config = {
     'user': 'root',
-    'password': '1234',
+    'password': 'umut',
     'host': 'localhost',
     'database': 'bil372_project',
     }
