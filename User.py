@@ -5,6 +5,7 @@ import re
 from utils import get_data, update_data, get_highest_id, insert_data, format_time, delete_data
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
+import randevu as r
 
 # Kullanıcı ana sayfa fonksiyonu
 # İçindeki sayfalar:
