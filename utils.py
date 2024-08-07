@@ -113,18 +113,24 @@ def get_highest_id(table_name, id_ismi):
         cursor.close()
         conn.close()
 
-# Veritabanından veri çekme fonksiyonu
 def get_data(query, params=None):
     conn = create_connection()
     if conn is None:
         return None
     try:
-        df = pd.read_sql(query, conn, params=params)
+        cursor = conn.cursor(dictionary=True)
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        result = cursor.fetchall()
+        df = pd.DataFrame(result)
         return df
-    except Error as e:
+    except mysql.connector.Error as e:
         st.error(f"Bir hata oluştu: {e}")
         return None
     finally:
+        cursor.close()
         conn.close()
 
 # Veritabanından veri silme fonksiyonu
