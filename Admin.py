@@ -2,7 +2,7 @@ import streamlit as st
 import mysql.connector
 import pandas as pd
 import re
-from utils import get_data, update_data, get_highest_id, insert_data, format_time
+from utils import get_data, update_data, get_highest_id, insert_data, format_time, delete_data
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
 
@@ -15,7 +15,59 @@ import GeneralUser as g
 
 def admin_main_page():
     st.title("Admin Ana Sayfa")
-    st.write("Hayvanlar Listesi ve Bilgileri")
+    st.write("Veterinerler Listesi ve Bilgileri")
+    
+    # Fetch veterinarians data from the database
+    veterinarians_query = """
+    SELECT veteriner.KullanıcıID, İsim, Soyisim, Email, TelefonNo
+    FROM veteriner
+    JOIN kullanıcı ON veteriner.KullanıcıID = kullanıcı.KullanıcıID
+    """
+    veterinarians_data = get_data(veterinarians_query)
+    
+    if not veterinarians_data.empty:
+        # Display the data as a table with delete buttons
+        for index, row in veterinarians_data.iterrows():
+            col1, col2, col3, col4, col5, col6 = st.columns([3, 3, 6, 4, 2, 6])
+            with col1:
+                st.write(row['İsim'])
+            with col2:
+                st.write(row['Soyisim'])
+            with col3:
+                st.write(row['Email'])
+            with col4:
+                st.write(row['TelefonNo'])
+            with col5:
+                # Unique key for each row's delete confirmation state
+                delete_key = f"confirm_delete_{index}"
+
+                # Check if a specific key in the session state is present, initialize if not
+                if delete_key not in st.session_state:
+                    st.session_state[delete_key] = False
+
+                # Check if "Sil" button was clicked
+                if st.button("Sil", key=f"sil_{index}"):
+                    st.session_state[delete_key] = not st.session_state[delete_key]
+
+            # If the state is set to show the confirmation message for this row
+            if st.session_state[delete_key]:
+                with col6:
+                    st.error("Silmek istediğine emin misin?")
+                    yes_col, no_col = st.columns([1, 1])
+                    with yes_col:
+                        if st.button("Evet", key=f"rumble_{index}"):
+                            delete_query = "DELETE FROM veteriner WHERE KullanıcıID = %s"
+                            delete_data(delete_query, (row['KullanıcıID'],))
+                            st.session_state[delete_key] = False  # Reset the state after deletion
+                            st.experimental_rerun()  # Refresh the page to reflect the changes
+                    with no_col:
+                        if st.button("Hayır", key=f"no_{index}"):
+                            st.session_state[delete_key] = False  # Reset the state if "No" is clicked
+                            st.experimental_rerun()  # Refresh the page to reflect the changes
+    else:
+        st.write("Henüz kayıtlı veteriner yok.")
+    
+
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("Veteriner Hekim Ekle"):

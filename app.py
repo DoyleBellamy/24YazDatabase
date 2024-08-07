@@ -4,7 +4,6 @@ import pandas as pd
 import re
 from utils import get_data, update_data, get_highest_id, insert_data, format_time
 from ilacEkleme import add_medicine_page
-#from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import Admin, GeneralUser, Main, User, Veteriner
 
 # st.session_state kullanarak kullanıcı_id tanımlama
@@ -70,3 +69,5 @@ elif st.session_state.page == "Veterinarian Change Password":
     Veteriner.veterinarian_change_password_page()
 elif st.session_state.page == "Admin Change Password":
     Admin.admin_change_password_page()
+elif st.session_state.page == 'update_animal':
+    User.update_animal_page()

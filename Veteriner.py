@@ -27,7 +27,6 @@ def veterinarian_main_page():
 
     data = get_data(get_query_veteriner_randevular, params)
 
-    print(data)
     if data is not None and not data.empty:
         # Convert data to a DataFrame
         df = pd.DataFrame(data)
@@ -47,6 +46,7 @@ def veterinarian_main_page():
         gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
         gb.configure_grid_options(domLayout='autoHeight')
         
+        gb.configure_column("Tarih", filter="agDateColumnFilter")
         gridOptions = gb.build()
 
         # Display the grid with selectable rows
@@ -75,7 +75,7 @@ def veterinarian_main_page():
     with col2:
         # TODO Burada ismi değişen buton olacak. Aktif'ken sadece aktifler görünecek. Bir daha basınca tümü görünecek. 
         # Aktiften kasıt randevu tarihinin bugünden sonra olması diyebiliriz direkt
-        if st.button("Geçmiş Hastalar"):
+        if st.button("Tüm Randevular/Hastalar"):
             print("dummy")
     with col3:
         if st.button("Bilgilerim"):

@@ -2,7 +2,7 @@ import streamlit as st
 import mysql.connector
 import pandas as pd
 import re
-from utils import get_data, update_data, get_highest_id, insert_data, format_time
+from utils import get_data, update_data, get_highest_id, insert_data, format_time, delete_data
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
 import randevu as r
@@ -21,7 +21,7 @@ def user_main_page():
 
     # Kullanıcının hayvanlarını getir
     animal_query = """
-    SELECT * FROM bil372_project.hastahayvan
+    SELECT HastaID, İsim, Yaş, Boy, Kilo, Tür, Cinsiyet FROM bil372_project.hastahayvan
     WHERE SahipID = %s;
     """
     id_str = str(st.session_state.kullanıcı_id)
@@ -30,39 +30,70 @@ def user_main_page():
     if animals_data is not None and not animals_data.empty:
         st.write("Hayvanların Bilgileri:")
 
-        # Seçili satırları saklamak için bir liste
-        selected_rows = []
+        if 'selected_animal_index' not in st.session_state:
+            st.session_state.selected_animal_index = None
 
         for index, row in animals_data.iterrows():
 
             # Sütunları oluştur
-            cols = st.columns([1, 5, 1])  # 1: Checkbox için, 5: Satır Bilgisi için, 1: Buton için
+            cols = st.columns([1, 6, 2, 1.2, 3])  
             
-            # Checkbox ve butonları ilgili sütunlara yerleştir
             with cols[0]:  # Checkbox sütunu
-                checkbox = st.checkbox("", key=f"checkbox_{index}")
-                if checkbox:    
-                    selected_rows.append(index)
-                    # Checkbox seçilince session_state'e hayvan_id ekle
-                    st.session_state.hayvan_id = row["HastaID"]
-                    
+
+                if st.checkbox("", key=f"checkbox_{index}", value=(index == st.session_state.selected_animal_index)):
+                    st.session_state.selected_animal_index = index
+                elif st.session_state.selected_animal_index == index:
+                    st.session_state.selected_animal_index = None
+            
+
             with cols[1]:  # Satır bilgisi sütunu
                 # Her satır için küçük bir tablo oluşturma
                 st.write(pd.DataFrame([row], columns=animals_data.columns))
             
-            #TODO BURADA SEÇİLEN Hayvan silme işlemi pop-up sonrası gerçekleşecek 
-            with cols[2]:  # Buton sütunu
-                if st.button(f"{row['HastaID']} Sil", key=f"button_{index}"):
-                    st.write(f"{row['HastaID']} için butona tıklandı!")
+            with cols[2]:  # Güncelle Butonu sütunu
+                if st.button("Güncelle", key=f"update_{index}"):
+                    st.session_state.selected_animal_id = row['HastaID']
+                    st.session_state.prev_page = st.session_state.page
+                    st.session_state.page = "update_animal"
+                    st.experimental_rerun()
+            
+            with cols[3]:  # Sil Butonu sütunu
+                delete_key = f"confirm_delete_{index}"
 
-        # BU KISIM BELKİ SİLİNEBİLİR
-        # Seçili satırları gösterme
-        if selected_rows:
-            st.write("Seçili Satırlar:")
-            selected_data = animals_data.loc[selected_rows]
-            st.table(selected_data)
+                if delete_key not in st.session_state:
+                    st.session_state[delete_key] = False
 
-    col1, col2, col3 = st.columns(3)
+                if st.button("Sil", key=f"button_{index}"):
+                    st.session_state[delete_key] = not st.session_state[delete_key]
+
+            # Eğer onay mesajı gösterilecekse
+            if st.session_state[delete_key]:
+                with cols[4]:
+                    st.error("Silmek istediğine emin misin?")
+                    yes_col, no_col = st.columns([1, 1.1])
+                    with yes_col:
+                        if st.button("Evet", key=f"yes_{index}"):
+                            delete_query = "DELETE FROM bil372_project.hastahayvan WHERE HastaID = %s"
+                            delete_data(delete_query, (row['HastaID'],))
+                            st.session_state[delete_key] = False
+                            st.experimental_rerun()
+                    with no_col:
+                        if st.button("Hayır", key=f"no_{index}"):
+                            st.session_state[delete_key] = False
+                            st.experimental_rerun()
+
+        # Alt tarafta Randevu Al butonu
+        if st.session_state.selected_animal_index is not None:
+            selected_animal = animals_data.iloc[st.session_state.selected_animal_index]
+            if st.button("Randevu Al"):
+                st.session_state.prev_page = st.session_state.page
+                st.session_state.page = "Book Appointment"
+                st.session_state.selected_animal_id = selected_animal['HastaID']
+                st.experimental_rerun()
+        else:
+            st.write("Randevu almak için bir hasta seçin.")
+
+    col1, col2 = st.columns(2)
     with col1:
         # Bu kısmın kodu eklendi hazır
         if st.button("Hayvan Ekle"):
@@ -74,13 +105,6 @@ def user_main_page():
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "User Info"
-            st.rerun()
-    with col3:
-        # TODO Burada checkbox ile seçilen 1 tane hayvan için randevu alacagiz
-        # TODO Secili herhangi bir hayvan yoksa randevu ala bastığı durumda hata vericez
-        if st.button("Randevu Al"):
-            st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Book Appointment"
             st.rerun()
 
     st.markdown("<br><br><br><br>", unsafe_allow_html=True)  # Add some space before the larger button
@@ -125,10 +149,10 @@ def user_info_page():
     with col1:
         isim = st.text_input("İsim", value = isim)
         soyisim = st.text_input("Soyisim", value = soyisim)
-        ilce = st.text_input("İlce", value = ilce)
-
-    with col2:
         email_adresi = st.text_input("E-Mail Adresi", value = email_adresi)
+        
+    with col2:
+        ilce = st.text_input("İlce", value = ilce)
         il = st.text_input("İl", value = il)
         mah = st.text_input("Mahalle", value = mah)
 
@@ -307,13 +331,42 @@ def book_appointment_page():
         st.rerun()
     
     if st.button("Randevu Al"):
+
+        # Placeholder for booking an appointment
         st.write("Randevu Al Buton")
-        # Randevu returns a boolean 1 if successfull 0 if failure
-        r.randevu(start,end)
-        try:
-            print("try")
-            #r.randevu(start,end)
-            #st.success("Randevu başarıyla alındı")
-        except :
-            print("except")
-            #st.error("Randevu alınırken hata oluştu. Lütfen tekrar deneyiniz")
+
+def update_animal_page():
+    st.title("Hayvan Güncelleme Ekranı")
+    
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.rerun()
+
+    animal_id = st.session_state.selected_animal_id
+
+    # Hayvanın mevcut bilgilerini getirme
+    animal_query = "SELECT İsim, Yaş, Boy, Kilo, Tür, Cinsiyet FROM bil372_project.hastahayvan WHERE HastaID = %s"
+    animal_data = get_data(animal_query, (animal_id,))
+
+    if not animal_data.empty:
+        animal = animal_data.iloc[0]
+        hayvan_isim = st.text_input("İsim", value=animal['İsim'])
+        hayvan_kilo = st.number_input("Kilo", min_value=0.0, step=0.1, value=float(animal['Kilo']))
+        hayvan_boy = st.number_input("Boy", min_value=0.0, step=0.1, value=float(animal['Boy']))
+        hayvan_yaş = st.number_input("Yaş", min_value=0.0, step=0.1, value=float(animal['Yaş']))
+        hayvan_tur = st.selectbox("Tür", options=["Kedi", "Köpek", "Kuş", "Tavşan", "Kaplumbağa", "Hamster", "Kobay"], index=["Kedi", "Köpek", "Kuş", "Tavşan", "Kaplumbağa", "Hamster", "Kobay"].index(animal['Tür']))
+        hayvan_cinsiyet = st.selectbox("Cinsiyet", options=["Dişi", "Erkek"], index=["Dişi", "Erkek"].index(animal['Cinsiyet']))
+        
+        # Güncelleme işlemi
+        if st.button("Güncelle"):
+            update_query = """
+            UPDATE bil372_project.hastahayvan
+            SET İsim = %s, Yaş = %s, Boy = %s, Kilo = %s, Tür = %s, Cinsiyet = %s
+            WHERE HastaID = %s
+            """
+            params = (hayvan_isim, hayvan_yaş, hayvan_boy, hayvan_kilo, hayvan_tur, hayvan_cinsiyet, animal_id)
+            update_data(update_query, params)
+            st.write("Hayvan bilgileri güncellendi!")
+    else:
+        st.write("Hayvan bilgileri bulunamadı.")
+

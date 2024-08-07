@@ -126,3 +126,21 @@ def get_data(query, params=None):
         return None
     finally:
         conn.close()
+
+# Veritabanından veri silme fonksiyonu
+def delete_data(query, params):
+    conn = create_connection()
+    if conn is None:
+        return
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        conn.commit()  # Değişiklikleri kaydeder
+        print(f"{cursor.rowcount} kayıt silindi.")
+    except Error as e:
+        print(f"Bir hata oluştu: {e}")
+        conn.rollback()  # Hata durumunda geri alır
+    finally:
+        cursor.close()
+        conn.close()
