@@ -52,8 +52,8 @@ def randevu(start,end):
     """
 
     randevu_olustur = """
-            INSERT INTO randevu (VeterinerID, SahipID, Tarih)
-            VALUES (%s,%s, %s)
+            INSERT INTO randevu (VeterinerID, SahipID,HastaID, Tarih)
+            VALUES (%s,%s,%s,%s)
         """
 
     i=0
@@ -62,11 +62,12 @@ def randevu(start,end):
     while date <= end :
         q = vet_uygun_q.format(date,st.session_state.veteriner_id,weekdays[date.weekday()],date,date + d.timedelta(days=1))
         uygun = get_data(q)
-
+        print("uygunlar:")
+        print(uygun)
         if uygun is not None and not uygun.empty:
 
             try:
-                params = str(st.session_state.veteriner_id), str(st.session_state.kullanıcı_id), str(uygun.iloc[0]['Tarih'])
+                params = str(st.session_state.veteriner_id), str(st.session_state.kullanıcı_id),str(st.session_state.hayvan_id),str(uygun.iloc[0]['Tarih'])
                 insert_data(randevu_olustur,params)
                 success = True
                 st.success("Randevunuz başarıyla oluşturulmuştur.")
