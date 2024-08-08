@@ -78,7 +78,10 @@ def veterinarian_main_page():
         # TODO Burada ismi değişen buton olacak. Aktif'ken sadece aktifler görünecek. Bir daha basınca tümü görünecek. 
         # Aktiften kasıt randevu tarihinin bugünden sonra olması diyebiliriz direkt
         if st.button("Tüm Randevular/Hastalar"):
-            print("dummy")
+            st.session_state.prev_page = st.session_state.page
+            st.session_state.page = "All_Appointments"
+            st.rerun()
+
     with col3:
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
@@ -191,3 +194,8 @@ def write_prescription_page():
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
+
+
+# Reçete yaz sayfası fonksiyonu
+def all_appointments():
+    print('dummy')

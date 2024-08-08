@@ -71,3 +71,5 @@ elif st.session_state.page == "Admin Change Password":
     Admin.admin_change_password_page()
 elif st.session_state.page == 'update_animal':
     User.update_animal_page()
+elif st.session_state.page == 'All_Appointments':
+    Veteriner.all_appointments()
