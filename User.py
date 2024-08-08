@@ -87,13 +87,26 @@ def user_main_page():
                             st.rerun()
 
         # Alt tarafta Randevu Al butonu
+        now = d.date.today()
+        q = """
+        select Tarih
+        from randevu
+        where SahipID ='{}' and Tarih between '{}' and '{}'
+        limit 1
+        ;
+        """.format(st.session_state.kullanıcı_id,now - d.timedelta(days=7),now)
+
+        randevular = get_data(q)
         if st.session_state.selected_animal_index is not None:
             selected_animal = animals_data.iloc[st.session_state.selected_animal_index]
             if st.button("Randevu Al"):
-                st.session_state.prev_page = st.session_state.page
-                st.session_state.page = "Book Appointment"
-                st.session_state.selected_animal_id = selected_animal['HastaID']
-                st.rerun()
+                if randevular.empty:
+                    st.session_state.prev_page = st.session_state.page
+                    st.session_state.page = "Book Appointment"
+                    st.session_state.selected_animal_id = selected_animal['HastaID']
+                    st.rerun()
+                else:
+                    st.error("Son 7 gün içerisinde randevunuz bulunmaktadır. Randevu alınamaz")
         else:
             st.write("Randevu almak için bir hasta seçin.")
 
@@ -365,16 +378,17 @@ def book_appointment_page():
         st.session_state.page = st.session_state.prev_page
         st.rerun()
     
-    
-    if st.button("Randevu Al"):
-        if(start<=end):
-            r.randevu(start,end)
-            #if start<d.Datetime.now() :
-                #st.error("Geçmiş tarihli randevu alamazsınız. Tarihleri düzenleyip tekrar deneyiniz")
-            #else:
-                #r.randevu(start,end)
+
+    #print(randevular.empty)
+    if st.button("Randevu Al") :
+        if start>=d.date.today() :
+            if(start<=end):
+                r.randevu(start,end)
+            else:
+                st.error("Bitiş tarihi başlangıç tarihinden önce olamaz. Tarihleri düzenleyip tekrar deneyiniz")
         else:
-            st.error("Bitiş tarihi başlangıç tarihinden önce olamaz. Tarihleri düzenleyip tekrar deneyiniz")
+            st.error("Geçmiş tarihli randevu alınamaz")
+
 
 def update_animal_page():
     st.title("Hayvan Güncelleme Ekranı")
