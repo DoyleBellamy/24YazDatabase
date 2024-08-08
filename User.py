@@ -289,19 +289,19 @@ def book_appointment_page():
     # Hayvan türüne göre veterinerleri getir ve reviewlerine göre sırala
     vet_query = """
         With vet_puanları AS(
-            SELECT v.KullanıcıID AS VetID,v.İsim AS Vetİsim, count(v.KullanıcıID) AS rew_sayısı  ,avg(r.puan) AS avg_p
+            SELECT v.KullanıcıID AS VetID,v.İsim AS `Veteriner ismi`, count(v.KullanıcıID) AS `Değerlendirme Sayısı`  ,avg(r.puan) AS `Puan`
             FROM veteriner AS v
             INNER JOIN reviewverir AS r
             ON v.KullanıcıID = r.VeterinerID
             group by(r.VeterinerID)
-            order by avg_p desc
+            order by 'Puan' desc
         )
-        SELECT * 
+        SELECT v.VetID,v.`Veteriner ismi`, v.`Değerlendirme Sayısı`, v.`Puan`
         FROM yetkinlik AS y 
         INNER JOIN vet_puanları AS v 
         	ON v.VetID = y.VeterinerID 
         WHERE y.Yetkinlik = '{}'
-        ORDER BY avg_p desc
+        ORDER BY `Puan` desc
     """.format(data1.iloc[0]["Tür"])
 
     data2 = get_data(vet_query)
@@ -318,7 +318,6 @@ def book_appointment_page():
         # Seçili satırları saklamak için bir liste
         # Convert data to a DataFrame
         df = pd.DataFrame(data2)
-        ddf = df[['VetID','Yetkinlik','Vetİsim','rew_sayısı','avg_p']]
         
     
         # Create a GridOptionsBuilder instance
@@ -331,7 +330,7 @@ def book_appointment_page():
 
         # Display the grid with selectable rows
         grid_response = AgGrid(
-            ddf,
+            df,
             gridOptions=gridOptions,
             update_mode='MODEL_CHANGED',
             fit_columns_on_grid_load=True,
