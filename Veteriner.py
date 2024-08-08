@@ -179,21 +179,67 @@ def veterinarian_change_password_page():
         st.session_state.prev_page = "Veterinarian Main"
         st.rerun()
 
-# Reçete yaz sayfası fonksiyonu
+
+
 def write_prescription_page():
     st.title("Reçete Yaz")
+
+    if 'prescriptions' not in st.session_state:
+        st.session_state.prescriptions = [{'ilac': '', 'doz': ''}]
+
+    # İlaç ve doz alanlarını dinamik olarak ekle
+    for i, prescription in enumerate(st.session_state.prescriptions):
+        col1, col2 = st.columns(2)
+        with col1:        
+            st.session_state.prescriptions[i]['ilac'] = st.text_input(f"İlaç {i+1}", prescription['ilac'], key=f'ilac_{i}')
+        with col2:
+            st.session_state.prescriptions[i]['doz'] = st.text_input(f"Doz {i+1}", prescription['doz'], key=f'doz_{i}')
+    
+    # Yeni ilaç ve doz alanı eklemek için buton
     col1, col2 = st.columns(2)
     with col1:
-        st.text_area("İlaç")
+        if st.button("Arttır"):
+            st.session_state.prescriptions.append({'ilac': '', 'doz': ''})
+    
+    # İlaç ve doz alanlarını azaltmak için buton
     with col2:
-        st.text_area("Doz")
-    st.text_area("Açıklama")
+        if st.button("Azalt"):
+            if len(st.session_state.prescriptions) > 1:
+                st.session_state.prescriptions.pop()
+
+    aciklama = st.text_area("Açıklama")
+
     if st.button("Reçeteyi Onayla"):
         st.write("Reçete onaylandı!")  # Placeholder for prescription approval
+        # İlaç ve doz bilgilerini bastır
+        empty_fields = False
+        for prescription in st.session_state.prescriptions:
+            if not prescription['ilac'] or not prescription['doz']:
+                empty_fields = True
+                break
+        if not aciklama:
+            empty_fields = True
+        
+        if empty_fields:
+            st.error("Lütfen tüm ilaç, doz ve açıklama alanlarını doldurun.")
+        else:
+            st.write("Reçete onaylandı!")
+            
+            # İlaç ve doz bilgilerini bastır
+            st.write("İlaç ve Doz Bilgileri:")
+            for i, prescription in enumerate(st.session_state.prescriptions):
+                st.write(f"İlaç {i+1}: {prescription['ilac']}")
+                st.write(f"Doz {i+1}: {prescription['doz']}")
+            
+            # Açıklama bilgisini bastır
+            st.write("Açıklama:")
+            st.write(aciklama)
 
     if st.button("Geri"):
+        st.session_state.prescriptions = [{'ilac': '', 'doz': ''}]
         st.session_state.page = st.session_state.prev_page
         st.rerun()
+
 
 
 # Reçete yaz sayfası fonksiyonu
@@ -201,12 +247,11 @@ def write_prescription_page():
 def all_appointments():
     st.title("Tüm Randevular")
 
-    # Burada 10 oncesinden oncekileri getirecegiz
     get_query_veteriner_randevular = """
     SELECT * FROM bil372_project.randevu r
     Join hayvansahibi hs on hs.kullanıcıID = r.sahipID
     Join hastahayvan hh on hh.sahipID = hs.kullanıcıID
-    WHERE veterinerID = %s and  r.Tarih < DATE_SUB(CURDATE(), INTERVAL 10 DAY);
+    WHERE veterinerID = %s ;
     """
     params = (str(st.session_state.veteriner_id),)
     
