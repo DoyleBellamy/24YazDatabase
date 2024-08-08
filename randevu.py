@@ -7,6 +7,8 @@ from ilacEkleme import add_medicine_page
 import GeneralUser as g
 import datetime as d
 
+#TODO Edge case olarak bugün saat 12 de sisteme girip bugün içerisinde randevu almak isteyen biri geçmiş bir saatte de randevu alabilir
+#Düzeltilmesi lazım
 def randevu(start,end):
 
     weekdays = {

@@ -5,6 +5,7 @@ import re
 from utils import get_data, update_data, get_highest_id, insert_data, format_time, delete_data
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
+import datetime as d
 import randevu as r
 from st_aggrid import AgGrid, GridOptionsBuilder
 
@@ -366,16 +367,14 @@ def book_appointment_page():
     
     
     if st.button("Randevu Al"):
-        st.write("Randevu Al Buton")
-        # Randevu returns a boolean 1 if successfull 0 if failure
-        r.randevu(start,end)
-        try:
-            print("try")
-            #r.randevu(start,end)
-            #st.success("Randevu başarıyla alındı")
-        except :
-            print("except")
-            #st.error("Randevu alınırken hata oluştu. Lütfen tekrar deneyiniz")
+        if(start<=end):
+            r.randevu(start,end)
+            #if start<d.Datetime.now() :
+                #st.error("Geçmiş tarihli randevu alamazsınız. Tarihleri düzenleyip tekrar deneyiniz")
+            #else:
+                #r.randevu(start,end)
+        else:
+            st.error("Bitiş tarihi başlangıç tarihinden önce olamaz. Tarihleri düzenleyip tekrar deneyiniz")
 
 def update_animal_page():
     st.title("Hayvan Güncelleme Ekranı")
