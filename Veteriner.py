@@ -16,17 +16,20 @@ def veterinarian_main_page():
     st.title("Veteriner Ana Sayfa")
     st.write("Aktif Randevular")
 
-
+    # TODO Buraya query'e aktifleri alacak şekilde bir where yazılmalı
+    # Tüm randevular tarafında bunu farklı yazıcaz 
+    # Fikir olarak bugünden 10 gün öncesi mesela aktiftir deyip daha da önceki olanlar için randevu falan eklenemez diyebiliriz
     get_query_veteriner_randevular = """
     SELECT * FROM bil372_project.randevu r
     Join hayvansahibi hs on hs.kullanıcıID = r.sahipID
     Join hastahayvan hh on hh.sahipID = hs.kullanıcıID
-    WHERE veterinerID = %s;
+    WHERE veterinerID = %s and r.Tarih >= DATE_SUB(CURDATE(), INTERVAL 10 DAY);
     """
     params = (str(st.session_state.veteriner_id),)
+    
+    selected_rows = pd.DataFrame()
 
     data = get_data(get_query_veteriner_randevular, params)
-
     if data is not None and not data.empty:
         # Convert data to a DataFrame
         df = pd.DataFrame(data)
@@ -58,25 +61,27 @@ def veterinarian_main_page():
             enable_enterprise_modules=True, 
             width='100%',
         )
-
         selected_rows = grid_response['selected_rows']
-        st.write("Selected Rows")
-        st.write(selected_rows)
 
     else:
-        st.write("Randevu Bulunamadı.")
+        st.warning("Randevu Bulunamadı.")
 
+    # Burada hizalamalar yapılabilir
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("Reçete Yaz"):
-            st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Write Prescription"
-            st.rerun()
+        if selected_rows is not None and not selected_rows.empty:
+            if st.button("Reçete Yaz"):
+                st.session_state.prev_page = st.session_state.page
+                st.session_state.page = "Write Prescription"
+                st.rerun()
     with col2:
         # TODO Burada ismi değişen buton olacak. Aktif'ken sadece aktifler görünecek. Bir daha basınca tümü görünecek. 
         # Aktiften kasıt randevu tarihinin bugünden sonra olması diyebiliriz direkt
         if st.button("Tüm Randevular/Hastalar"):
-            print("dummy")
+            st.session_state.prev_page = st.session_state.page
+            st.session_state.page = "All_Appointments"
+            st.rerun()
+
     with col3:
         if st.button("Bilgilerim"):
             st.session_state.prev_page = st.session_state.page
@@ -106,10 +111,6 @@ def veterinarian_info_page():
     oda = vet_info.iloc[0]['OdaNO']
 
     st.title("Bilgilerim")
-    if st.button("Geri"):
-        st.session_state.page = st.session_state.prev_page
-        st.rerun()
-
     col1, col2 = st.columns(2)
     with col1:
         isim = st.text_input("İsim", value = isim)
@@ -149,6 +150,7 @@ def veterinarian_info_page():
 
             print("Here we go!")
             try:
+               # TODO Buradaki data1 ve data2 ise yaramiyorsa atanmasin
                data1 = update_data(update_kul_query,params1)
             except:
                 st.error("Email adresiniz değiştirilirken bir hata oluştu.")
@@ -164,6 +166,11 @@ def veterinarian_info_page():
             st.session_state.prev_page = st.session_state.page
             st.session_state.page = "Veterinarian Change Password"
             st.rerun()
+    # TODO Buna basinca geri sayfada biraz bozuluyor düzeltilebilir.   
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.rerun()
+
 
 def veterinarian_change_password_page():
     g.change_password_page(st.session_state.veteriner_id)
@@ -175,10 +182,6 @@ def veterinarian_change_password_page():
 # Reçete yaz sayfası fonksiyonu
 def write_prescription_page():
     st.title("Reçete Yaz")
-    if st.button("Geri"):
-        st.session_state.page = st.session_state.prev_page
-        st.rerun()
-    st.selectbox("Hastalar", options=["Hasta 1", "Hasta 2"])  # Placeholder options
     col1, col2 = st.columns(2)
     with col1:
         st.text_area("İlaç")
@@ -187,3 +190,12 @@ def write_prescription_page():
     st.text_area("Açıklama")
     if st.button("Reçeteyi Onayla"):
         st.write("Reçete onaylandı!")  # Placeholder for prescription approval
+
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.rerun()
+
+
+# Reçete yaz sayfası fonksiyonu
+def all_appointments():
+    print('dummy')

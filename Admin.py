@@ -26,6 +26,8 @@ def admin_main_page():
     """
     veterinarians_data = get_data(veterinarians_query)
     
+    selected_rows = pd.DataFrame()
+
     if veterinarians_data is not None and not veterinarians_data.empty:
         # Convert data to a DataFrame
         df = pd.DataFrame(veterinarians_data)
