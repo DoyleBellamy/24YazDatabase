@@ -26,9 +26,10 @@ def veterinarian_main_page():
     WHERE veterinerID = %s and r.Tarih >= DATE_SUB(CURDATE(), INTERVAL 10 DAY);
     """
     params = (str(st.session_state.veteriner_id),)
+    
+    selected_rows = pd.DataFrame()
 
     data = get_data(get_query_veteriner_randevular, params)
-
     if data is not None and not data.empty:
         # Convert data to a DataFrame
         df = pd.DataFrame(data)
@@ -63,14 +64,16 @@ def veterinarian_main_page():
         selected_rows = grid_response['selected_rows']
 
     else:
-        st.write("Randevu Bulunamadı.")
+        st.warning("Randevu Bulunamadı.")
 
+    # Burada hizalamalar yapılabilir
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("Reçete Yaz"):
-            st.session_state.prev_page = st.session_state.page
-            st.session_state.page = "Write Prescription"
-            st.rerun()
+        if selected_rows is not None and not selected_rows.empty:
+            if st.button("Reçete Yaz"):
+                st.session_state.prev_page = st.session_state.page
+                st.session_state.page = "Write Prescription"
+                st.rerun()
     with col2:
         # TODO Burada ismi değişen buton olacak. Aktif'ken sadece aktifler görünecek. Bir daha basınca tümü görünecek. 
         # Aktiften kasıt randevu tarihinin bugünden sonra olması diyebiliriz direkt
