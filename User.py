@@ -5,7 +5,9 @@ import re
 from utils import get_data, update_data, get_highest_id, insert_data, format_time, delete_data
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
+import datetime as d
 import randevu as r
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Kullanıcı ana sayfa fonksiyonu
 # İçindeki sayfalar:
@@ -42,6 +44,8 @@ def user_main_page():
 
                 if st.checkbox("", key=f"checkbox_{index}", value=(index == st.session_state.selected_animal_index)):
                     st.session_state.selected_animal_index = index
+                    # Checkbox seçilince session_state'e hayvan_id ekle
+                    st.session_state.hayvan_id = row["HastaID"]
                 elif st.session_state.selected_animal_index == index:
                     st.session_state.selected_animal_index = None
             
@@ -83,13 +87,26 @@ def user_main_page():
                             st.rerun()
 
         # Alt tarafta Randevu Al butonu
+        now = d.date.today()
+        q = """
+        select Tarih
+        from randevu
+        where SahipID ='{}' and Tarih between '{}' and '{}'
+        limit 1
+        ;
+        """.format(st.session_state.kullanıcı_id,now - d.timedelta(days=7),now)
+
+        randevular = get_data(q)
         if st.session_state.selected_animal_index is not None:
             selected_animal = animals_data.iloc[st.session_state.selected_animal_index]
             if st.button("Randevu Al"):
-                st.session_state.prev_page = st.session_state.page
-                st.session_state.page = "Book Appointment"
-                st.session_state.selected_animal_id = selected_animal['HastaID']
-                st.rerun()
+                if randevular.empty:
+                    st.session_state.prev_page = st.session_state.page
+                    st.session_state.page = "Book Appointment"
+                    st.session_state.selected_animal_id = selected_animal['HastaID']
+                    st.rerun()
+                else:
+                    st.error("Son 7 gün içerisinde randevunuz bulunmaktadır. Randevu alınamaz")
         else:
             st.write("Randevu almak için bir hasta seçin.")
 
@@ -273,67 +290,105 @@ def book_appointment_page():
     saatler = None
 
     # Sayfa görünümü
+    # Randevu için kullanıcı id ve hayvan id yi kullanarak hayvanın özelliklerini getir
+    h_id = st.session_state.hayvan_id
+    k_id = st.session_state.kullanıcı_id
+
+    hayvan_query = """
+    SELECT * FROM hastahayvan AS h WHERE h.HastaID = '{}' and h.SahipID = '{}'
+    """.format(h_id,k_id)
+
+    data1 = get_data(hayvan_query)
+
+    # Hayvan türüne göre veterinerleri getir ve reviewlerine göre sırala
+    vet_query = """
+        With vet_puanları AS(
+            SELECT v.KullanıcıID AS VetID,v.İsim AS `Veteriner ismi`, count(v.KullanıcıID) AS `Değerlendirme Sayısı`  ,avg(r.puan) AS `Puan`
+            FROM veteriner AS v
+            INNER JOIN reviewverir AS r
+            ON v.KullanıcıID = r.VeterinerID
+            group by(r.VeterinerID)
+            order by 'Puan' desc
+        )
+        SELECT v.VetID,v.`Veteriner ismi`, v.`Değerlendirme Sayısı`, v.`Puan`
+        FROM yetkinlik AS y 
+        INNER JOIN vet_puanları AS v 
+        	ON v.VetID = y.VeterinerID 
+        WHERE y.Yetkinlik = '{}'
+        ORDER BY `Puan` desc
+    """.format(data1.iloc[0]["Tür"])
+
+    data2 = get_data(vet_query)
+    saatler = None
+
+    # Sayfa görünümü
     st.title("Randevu Al")
     st.write("Veterinerler ve Uygun Saatler Listesi")
     if data2 is not None and not data2.empty:
         st.write("Veterinerler:")
         print(saatler)
+
+
         # Seçili satırları saklamak için bir liste
-        selected_rows = []
+        # Convert data to a DataFrame
+        df = pd.DataFrame(data2)
+        
+    
+        # Create a GridOptionsBuilder instance
+        gb = GridOptionsBuilder.from_dataframe(df)
+        # Configure selection and layout options
+        gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+        gb.configure_grid_options(domLayout='autoHeight')
+        
+        gridOptions = gb.build()
 
-        for index, row in data2.iterrows():
+        # Display the grid with selectable rows
+        grid_response = AgGrid(
+            df,
+            gridOptions=gridOptions,
+            update_mode='MODEL_CHANGED',
+            fit_columns_on_grid_load=True,
+            enable_enterprise_modules=True, 
+            width='100%',
+        )
 
-            vet_data = {
-            "Veteriner İsmi": row["Vetİsim"],
-            "Değerlendirme Sayısı": row["rew_sayısı"],
-            "Puan": row["avg_p"]
-            }
+        selected_rows = grid_response['selected_rows']
 
-            # Sütunları oluştur
-            cols = st.columns([1, 3, 1])  # 1: Checkbox için, 5: Satır Bilgisi için, 1: Buton için
-            
-            # Checkbox ve butonları ilgili sütunlara yerleştir
-            with cols[0]:  # Checkbox sütunu
-                checkbox = st.checkbox("", key=f"checkbox_{index}")
-                if checkbox:    
-                    selected_rows.append(index)
-                    # Checkbox seçilince session_state'e hayvan_id ekle
-                    st.session_state.veteriner_id = row["VeterinerID"]
-                    if st.session_state.veteriner_id is not None:
-                        saat_query = """
-                        SELECT u.SaatID, u.VeterinerID FROM uygundur AS u 
-                        INNER JOIN veteriner AS v ON v.KullanıcıID=u.VeterinerID 
-                        INNER JOIN saatler AS s ON s.SaatID=u.SaatID
-                        WHERE u.VeterinerID = '{}'
-                        """.format(st.session_state.veteriner_id)
-                        saatler = get_data(saat_query)
-                        print(saatler)
-                    
-            with cols[1]:  # Satır bilgisi sütunu
-                # Her satır için küçük bir tablo oluşturma
-                st.write(pd.DataFrame([vet_data], columns=["Veteriner İsmi","Değerlendirme Sayısı","Puan"]))
+        if selected_rows is not None and not selected_rows.empty:
+            print("VetID:")
+            print(selected_rows['VetID'][0])
+            st.session_state.veteriner_id = selected_rows['VetID'][0]
+        
     
     # Başlangıç ve bitiş tarihlerini kullanıcı seçer
     # Sistem bu tarihler arasında uygun en yakın tarih ve saatli randevuyu oluşturup kullanıcıya tanımlar
-    st.write("Saat aralığı seçiniz")
-    if(saatler is not None and not saatler.empty):
-        cols2 = st.columns(2)
-        with cols2[0]:
+    st.write("Tarih aralığı seçiniz")
+    cols2 = st.columns(2)
+    with cols2[0]:
+        start = st.date_input("Başlangıç:")
+        print(start)
 
-            start = st.date_input("Başlangıç:")
-            print(start)
-        with cols2[1]:
-
+    with cols2[1]:
             end = st.date_input("Bitiş:")
             print(end)
+
+    #if(saatler is not None and not saatler.empty):
+        
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
     
-    if st.button("Randevu Al"):
 
-        # Placeholder for booking an appointment
-        st.write("Randevu Al Buton")
+    #print(randevular.empty)
+    if st.button("Randevu Al") :
+        if start>=d.date.today() :
+            if(start<=end):
+                r.randevu(start,end)
+            else:
+                st.error("Bitiş tarihi başlangıç tarihinden önce olamaz. Tarihleri düzenleyip tekrar deneyiniz")
+        else:
+            st.error("Geçmiş tarihli randevu alınamaz")
+
 
 def update_animal_page():
     st.title("Hayvan Güncelleme Ekranı")

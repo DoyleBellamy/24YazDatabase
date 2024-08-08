@@ -7,6 +7,8 @@ from ilacEkleme import add_medicine_page
 import GeneralUser as g
 import datetime as d
 
+#TODO Edge case olarak bugün saat 12 de sisteme girip bugün içerisinde randevu almak isteyen biri geçmiş bir saatte de randevu alabilir
+#Düzeltilmesi lazım
 def randevu(start,end):
 
     weekdays = {
@@ -19,53 +21,67 @@ def randevu(start,end):
         6 : "Pazar"
     }
 
-    print("randevu alma işlemi başlıyor")
-    print(st.session_state.veteriner_id)
-    print(st.session_state.kullanıcı_id)
-    #Burada where kısmına end ve start arasındaki tüm randevuları getirtebiliriz
-    vet_randevular ="""
-    SELECT * FROM randevu WHERE VeterinerID = '{}' 
-    """.format(st.session_state.veteriner_id)
-    randevular = get_data(vet_randevular)
-    print(randevular)
-    # Uygun zamanları getir 
-    vet_uygun_q = """
+    vet_uygun_q ="""
+    with
+    saat as(
     SELECT 
-    u.SaatID, 
-    u.VeterinerID,
-    s.Gün, 
-    STR_TO_DATE(CONCAT('2024-01-01 ', 
-        LPAD(s.Saat, 2, '0'),
-        ':',
-        LPAD(s.Dakika, 2, '0'),
-        ':00'
-    ),'%Y-%m-%d %H:%i:%s')
-     AS Tarih
-    FROM 
-    uygundur u
-    JOIN 
-    saatler s ON u.SaatID = s.SaatID
-    WHERE u.VeterinerID = '{}' AND s.Gün = '{}'
-    """.format(st.session_state.veteriner_id,"Pazartesi")
-    uygun = get_data(vet_uygun_q)
-    print(uygun)
+        u.SaatID, 
+        u.VeterinerID,
+        s.Gün, 
+        STR_TO_DATE(CONCAT('{}', 
+            LPAD(s.Saat, 2, '0'),
+            ':',
+            LPAD(s.Dakika, 2, '0'),
+            ':00'
+        ),'%Y-%m-%d %H:%i:%s')
+         AS Tarih
+        FROM 
+        uygundur u
+        JOIN 
+        saatler s ON u.SaatID = s.SaatID
+        WHERE u.VeterinerID = '{}' AND s.Gün = '{}'),
+    ran as (
+    SELECT * FROM randevu as r
+    WHERE r.tarih >='{}'
+    AND r.tarih <'{}')
+    Select s.VeterinerID, s.Gün, s.Tarih
+    from saat as s
+    left join ran as r
+    on s.Tarih = r.Tarih
+    where r.Tarih is null
+    order by r.Tarih asc
+    ;
+    """
 
     randevu_olustur = """
-            INSERT INTO randevu (VeterinerID, SahipID, Tarih)
-            VALUES (%s,%s, %s)
+            INSERT INTO randevu (VeterinerID, SahipID,HastaID, Tarih)
+            VALUES (%s,%s,%s,%s)
         """
-    
-    #print(start.strftime('%Y-%m-%d %H:%M:%S'))
-    print(weekdays[start.weekday()])
 
     i=0
     date = start
+    success = False
     while date <= end :
-        print(date)
+        q = vet_uygun_q.format(date,st.session_state.veteriner_id,weekdays[date.weekday()],date,date + d.timedelta(days=1))
+        uygun = get_data(q)
+        print("uygunlar:")
+        print(uygun)
+        if uygun is not None and not uygun.empty:
+
+            try:
+                params = str(st.session_state.veteriner_id), str(st.session_state.kullanıcı_id),str(st.session_state.hayvan_id),str(uygun.iloc[0]['Tarih'])
+                insert_data(randevu_olustur,params)
+                print("Randevu başarıyla oluşturuldu:")
+                print(uygun.iloc[0]['Tarih'])
+                success = True
+                st.success("Randevunuz başarıyla oluşturulmuştur.")
+            except:
+                success = True
+                st.error("Randevu oluşturulurken bir hata oluştu. Lütfen tekrar deneyeniz")
+            break
         date += d.timedelta(days=1)
         i += 1
+    if not success:
+        st.error("Seçtiğiniz aralıkta uygun randevu bulunamadı. Farklı tarihlerle tekrar deneyiniz.")
     
-    print(start.strftime('%Y-%m-%d'))
-    #print(f"Saat: {start.strftime('%Y-%m-%d').hour}:{start.strftime('%Y-%m-%d').minute}")
-    params = str(st.session_state.veteriner_id), str(st.session_state.kullanıcı_id), start.strftime('%Y-%m-%d')
-    insert_data(randevu_olustur,params)
+    
