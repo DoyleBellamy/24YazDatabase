@@ -197,5 +197,59 @@ def write_prescription_page():
 
 
 # Reçete yaz sayfası fonksiyonu
+# TODO Burada seçtiğinin için alt tarafta bilgilerini gorecek 
 def all_appointments():
-    print('dummy')
+    st.title("Tüm Randevular")
+
+    # Burada 10 oncesinden oncekileri getirecegiz
+    get_query_veteriner_randevular = """
+    SELECT * FROM bil372_project.randevu r
+    Join hayvansahibi hs on hs.kullanıcıID = r.sahipID
+    Join hastahayvan hh on hh.sahipID = hs.kullanıcıID
+    WHERE veterinerID = %s and  r.Tarih < DATE_SUB(CURDATE(), INTERVAL 10 DAY);
+    """
+    params = (str(st.session_state.veteriner_id),)
+    
+    selected_rows = pd.DataFrame()
+
+    data = get_data(get_query_veteriner_randevular, params)
+    if data is not None and not data.empty:
+        # Convert data to a DataFrame
+        df = pd.DataFrame(data)
+        
+        # Remove columns containing 'ID'
+        df = df.loc[:, ~df.columns.str.contains('ID')]
+        columns = df.columns.tolist()
+        for i, col in enumerate(columns):
+            if col == "İsim":
+                columns[i] = "Sahip İsmi"
+                break
+        df.columns = columns
+
+        # Create a GridOptionsBuilder instance
+        gb = GridOptionsBuilder.from_dataframe(df)
+        # Configure selection and layout options
+        gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+        gb.configure_grid_options(domLayout='autoHeight')
+        
+        gb.configure_column("Tarih", filter="agDateColumnFilter")
+        gridOptions = gb.build()
+
+        # Display the grid with selectable rows
+        grid_response = AgGrid(
+            df,
+            gridOptions=gridOptions,
+            update_mode='MODEL_CHANGED',
+            fit_columns_on_grid_load=True,
+            enable_enterprise_modules=True, 
+            width='100%',
+        )
+        selected_rows = grid_response['selected_rows']
+
+    else:
+        st.warning("Randevu Bulunamadı.")
+
+    # TODO Buna basinca geri sayfada biraz bozuluyor düzeltilebilir.   
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.rerun()
