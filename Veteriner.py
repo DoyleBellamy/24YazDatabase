@@ -373,7 +373,9 @@ def all_appointments():
         print(selected_rows['Tarih'].iloc[0])
         data2 = get_data(get_query_veteriner_recete, params)
 
+        data2 = pd.DataFrame([data2.iloc[0]])
         st.write(data2)
+        
         
         if data2 is not None and not data2.empty:
             st.write('Reçetedeki İlaçlar')
