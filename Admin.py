@@ -30,29 +30,30 @@ def admin_main_page():
 
     if veterinarians_data is not None and not veterinarians_data.empty:
         st.write("Veterinerler Listesi ve Bilgileri")
-        # Convert data to a DataFrame
-        df = pd.DataFrame(veterinarians_data)
-        
-    
-        # Create a GridOptionsBuilder instance
-        gb = GridOptionsBuilder.from_dataframe(df)
-        # Configure selection and layout options
-        gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
-        gb.configure_grid_options(domLayout='autoHeight')
-        
-        gridOptions = gb.build()
+        df_vets = pd.DataFrame(veterinarians_data)
 
-        # Display the grid with selectable rows
-        grid_response = AgGrid(
-            df,
-            gridOptions=gridOptions,
+        gb_vets = GridOptionsBuilder.from_dataframe(df_vets)
+        gb_vets.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+        gb_vets.configure_pagination(paginationAutoPageSize=False, paginationPageSize=10)  # Enable pagination for veterinarians
+        gb_vets.configure_grid_options(domLayout='normal')
+
+        gridOptions_vets = gb_vets.build()
+
+        row_count = len(df_vets)
+        grid_height = min(350, 50 + row_count * 45)
+
+        grid_response_vets = AgGrid(
+            df_vets,
+            gridOptions=gridOptions_vets,
             update_mode='MODEL_CHANGED',
             fit_columns_on_grid_load=True,
-            enable_enterprise_modules=True, 
+            enable_enterprise_modules=True,
+            height=grid_height, 
             width='100%',
         )
 
-        selected_rows = grid_response['selected_rows']
+        selected_rows = grid_response_vets['selected_rows']
+
 
     
 
