@@ -285,15 +285,6 @@ def write_prescription_page():
             st.session_state.page = st.session_state.prev_page
             st.rerun()
                 
-            
-            
-            
-            
-            # for i, prescription in enumerate(st.session_state.prescriptions):
-            #     st.write(f"İlaç {i+1}: {prescription['ilac']}")
-            #     st.write(f"Doz {i+1}: {prescription['doz']}")
-            
-
 
     if st.button("Geri"):
         st.session_state.prescriptions = [{'ilac': '', 'doz': 0}]
