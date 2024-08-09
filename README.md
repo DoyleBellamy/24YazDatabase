@@ -29,7 +29,13 @@ Projemiz, bir Veteriner Kliniği için web tabanlı bir prototiptir. Sistem, ü�
 
 ### Nasıl Çalıştırılır?
 
-- Repository'i lokal bilgisayarına kopyalayın:
+- Repository'i lokal bilgisayarınıza kopyalayın:
   ```
   https://github.com/DoyleBellamy/24YazDatabase.git
   ```
+- SQL Codes klasöründe bulunan güncel veri tabanı kodlarını kullandığınız MySQL destekli veri tabanı yönetim aracınızda çalıştırıp gerekli schemayı elde edin.
+- config.py dosyasındaki bilgileri veri tabanınıza göre güncelleyin.
+- Gerekli kütüphaneleri indirin ve app.py dosyasını çalıştırıp sizi web sayfasına yönlendirmesini bekleyin:
+```
+streamlit run app.py
+```
