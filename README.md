@@ -1,6 +1,6 @@
-<div style="text-align: center;">
+
   <img src="https://github.com/user-attachments/assets/d120e779-6222-41e9-a983-6e6e49d606c0" alt="Görsel Açıklaması" width="300"/>
-</div>
+
 
 # Veteriner Klinik Yönetim Sistemi
 
