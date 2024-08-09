@@ -205,32 +205,42 @@ def write_prescription_page():
         ilac_names = df_ilac['İsim'].tolist()
         ilac_ids = {row['İsim']: row['İlaçID'] for _, row in df_ilac.iterrows()}
 
+    # Eğer session_state içinde prescriptions yoksa, başlat
     if 'prescriptions' not in st.session_state:
-        st.session_state.prescriptions = [{'ilac': '', 'doz': 0}]
+        st.session_state.prescriptions = [{'ilac': ilac_names[0] if ilac_names else '', 'doz': 0}]
 
     # İlaç ve doz alanlarını dinamik olarak ekle
     for i, prescription in enumerate(st.session_state.prescriptions):
         col1, col2 = st.columns(2)
         with col1:
-            # Use selectbox for İlaç selection instead of text_input
-            st.session_state.prescriptions[i]['ilac'] = st.selectbox(
+            selected_ilac = st.selectbox(
                 f"İlaç {i+1}", 
                 options=ilac_names,
                 index=ilac_names.index(prescription['ilac']) if prescription['ilac'] in ilac_names else 0,
                 key=f'ilac_{i}'
             )
+            st.session_state.prescriptions[i]['ilac'] = selected_ilac
         with col2:
-            st.session_state.prescriptions[i]['doz'] = st.number_input(f"Doz {i+1}", prescription['doz'], key=f'doz_{i}')
-    
-    # Yeni ilaç ve doz alanı eklemek için buton
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Arttır"):
-            st.session_state.prescriptions.append({'ilac': '', 'doz': 0})
-    
-    # İlaç ve doz alanlarını azaltmak için buton
-    with col2:
-        if st.button("Azalt"):
+            # Dozu text_input ile al, sadece sayısal değerleri kabul et
+            selected_doz = st.text_input(
+                f"Doz (mg) {i+1}",
+                value=prescription['doz'],
+                key=f'doz_{i}'
+            )
+            # Girişin sadece sayı olduğundan emin ol
+            if selected_doz.isdigit():
+                st.session_state.prescriptions[i]['doz'] = int(selected_doz)
+            else:
+                st.session_state.prescriptions[i]['doz'] = 0
+                st.warning(f"Lütfen geçerli bir doz girin (sadece sayılar).")
+
+    # İlaç sayısını artır ve azalt butonları
+    cola, colb = st.columns(2)
+    with cola:
+        if st.button("İlaç Ekle"):
+            st.session_state.prescriptions.append({'ilac': ilac_names[0] if ilac_names else '', 'doz': 0})
+    with colb:
+        if st.button("İlaç Sil"):
             if len(st.session_state.prescriptions) > 1:
                 st.session_state.prescriptions.pop()
 
