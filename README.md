@@ -1,3 +1,7 @@
+<img src="https://github.com/user-attachments/assets/d120e779-6222-41e9-a983-6e6e49d606c0" alt="Görsel Açıklaması" width="600" height="400"/>
+
+
+
 # Veteriner Klinik Yönetim Sistemi
 
 Projemiz, bir Veteriner Kliniği için web tabanlı bir prototiptir. Sistem, üç farklı tipte kullanıcıya hizmet vermektedir: Hasta Hayvan Sahibi, Veteriner Hekim ve Admin. Her kullanıcı tipi, klinik operasyonlarına uygun olarak özelleştirilmiş işlevlere sahiptir.
