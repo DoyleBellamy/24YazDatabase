@@ -136,7 +136,7 @@ def user_main_page():
 def past_appointments_page():
 
     q ="""
-    select v.isim as 'Veteriner İsmi', r.Tarih
+    select r.VeterinerID,v.isim as 'Veteriner İsmi',r.HastaID, r.Tarih
     from randevu as r
     inner join veteriner as v
 	    on v.KullanıcıID = r.VeterinerID
@@ -177,19 +177,72 @@ def past_appointments_page():
 
         selected_rows = grid_response['selected_rows']
 
-   
+    btn = 0
+    col1, col2 = st.columns(2)
     if selected_rows is not None and not selected_rows.empty:
-            if st.button("Sil"):
-                delete_query = "DELETE FROM veteriner WHERE KullanıcıID = %s"
-                id = str(selected_rows['KullanıcıID'][0])
-                delete_data(delete_query, (id,))
-                delete_query_user = "DELETE FROM kullanıcı WHERE KullanıcıID = %s"
-                delete_data(delete_query_user, (id,))
-                st.rerun()  # Refresh the page to reflect the changes
+            print("VetID:")
+            print(selected_rows['VeterinerID'][0])
+            st.session_state.veteriner_id = selected_rows['VeterinerID'][0]
+            print("HastaID:")
+            print(selected_rows['HastaID'][0])
+            st.session_state.hayvan_id = selected_rows['HastaID'][0]
+            with col1:
+                if st.button("Değerlendir"):
+                    btn = 1
+            with col2:
+                if st.button("Reçete"):
+                    btn = 2
+
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
-    st.write("Geçmiş Randevu, Review, Fatura Bilgileri, Reçete")
+
+    match btn:
+        case 1:
+            st.write(btn)
+        case 2:
+            st.write(str(btn)+"sdsd")
+            if randevular is not None and not randevular.empty:
+                print(randevular.iloc[0]['Tarih'])
+                print(randevular.iloc[0]['Tarih']+d.timedelta(days=1))
+                r_q ="""
+                select e.ReçeteID, e.Tarih, e.aciklama as 'Açıklama'
+                from randevu as r
+                inner join reçete as e
+	            on e.VeterinerID = r.VeterinerID and e.HastaHayvanID = r.HastaID
+                where r.VeterinerID ='{}' and r.SahipID ='{}' and r.HastaID = '{}' and e.Tarih between '{}' and '{}'
+                """.format(st.session_state.veteriner_id,st.session_state.kullanıcı_id,st.session_state.hayvan_id,randevular.iloc[0]['Tarih'],randevular.iloc[0]['Tarih']+d.timedelta(days=1))
+                d_r = get_data(r_q)
+                print(d_r)
+
+                selected_rows_recete = pd.DataFrame()
+    
+                if d_r is not None and not d_r.empty:
+                    # Convert data to a DataFrame
+                    df = pd.DataFrame(d_r)
+        
+    
+                    # Create a GridOptionsBuilder instance
+                    gb = GridOptionsBuilder.from_dataframe(df)
+                    # Configure selection and layout options
+                    gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+                    gb.configure_grid_options(domLayout='autoHeight')
+        
+                    gridOptions = gb.build()
+
+                    # Display the grid with selectable rows
+                    grid_response = AgGrid(
+                        df,
+                        gridOptions=gridOptions,
+                        update_mode='MODEL_CHANGED',
+                        fit_columns_on_grid_load=True,
+                        enable_enterprise_modules=True, 
+                        width='100%',
+                    )
+
+                    selected_rows_recete = grid_response['selected_rows']
+
+    
 
 # Kullanıcı bilgileri sayfası fonksiyonu
 def user_info_page():
