@@ -17,6 +17,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 #   - add_animal_page
 #   - book_appointment_page
 
+st.session_state.btn = None
 def user_main_page():
     st.title("Kullanıcı Ana Sayfa")
     st.write("Hayvanlar Listesi ve Bilgileri ve Randevu Alma")
@@ -134,7 +135,7 @@ def user_main_page():
 
 # Geçmiş randevular sayfası fonksiyonu
 def past_appointments_page():
-
+    
     q ="""
     select r.VeterinerID,v.isim as 'Veteriner İsmi',r.HastaID, r.Tarih
     from randevu as r
@@ -177,7 +178,7 @@ def past_appointments_page():
 
         selected_rows = grid_response['selected_rows']
 
-    btn = 0
+    
     col1, col2 = st.columns(2)
     if selected_rows is not None and not selected_rows.empty:
             print("VetID:")
@@ -186,61 +187,119 @@ def past_appointments_page():
             print("HastaID:")
             print(selected_rows['HastaID'][0])
             st.session_state.hayvan_id = selected_rows['HastaID'][0]
+
             with col1:
-                if st.button("Değerlendir"):
-                    btn = 1
+                if st.button("Veterineri Değerlendir"):
+                    st.session_state.btn = 1
+                    #Review bilgileri
+
+                
             with col2:
                 if st.button("Reçete"):
-                    btn = 2
+                    st.session_state.btn = 2
+                    
 
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
+    if "btn" in st.session_state:
+        match st.session_state.btn:
+            case 1:
+                #Review bilgileri
 
-    match btn:
-        case 1:
-            st.write(btn)
-        case 2:
-            st.write(str(btn)+"sdsd")
-            if randevular is not None and not randevular.empty:
-                print(randevular.iloc[0]['Tarih'])
-                print(randevular.iloc[0]['Tarih']+d.timedelta(days=1))
-                r_q ="""
-                select e.ReçeteID, e.Tarih, e.aciklama as 'Açıklama'
-                from randevu as r
-                inner join reçete as e
-	            on e.VeterinerID = r.VeterinerID and e.HastaHayvanID = r.HastaID
-                where r.VeterinerID ='{}' and r.SahipID ='{}' and r.HastaID = '{}' and e.Tarih between '{}' and '{}'
-                """.format(st.session_state.veteriner_id,st.session_state.kullanıcı_id,st.session_state.hayvan_id,randevular.iloc[0]['Tarih'],randevular.iloc[0]['Tarih']+d.timedelta(days=1))
-                d_r = get_data(r_q)
-                print(d_r)
+                #Önceden review var mı kontrol et
+                rev_q="""
+                select * 
+                from reviewverir 
+                where HayvanSahibiID='{}' and VeterinerID='{}'   
+                """.format(st.session_state.kullanıcı_id,st.session_state.veteriner_id)
+                rev_d = get_data(rev_q)
+                print(rev_d)
+                aciklama=""
+                puan = 0
+                anon = False
+                if rev_d is not None and not rev_d.empty:
+                    aciklama=rev_d.iloc[0]['Açıklama']
+                    puan = rev_d.iloc[0]['Puan']
+                    # 0 ise anonim, 1 ise anonim değil
+                    anon = rev_d.iloc[0]['Anonim']
 
-                selected_rows_recete = pd.DataFrame()
+                container = st.container(border=True)
+
+                container.title("Veteriner Değerlendir")
+            
+                container.info("Değerlendirmenizin başka kullanıcılar tarafından görülmesini istemiyorsanız aşağıdaki kutuyu işaretleyiniz.")
+                anon = container.checkbox("Anonim",value=anon)
+            
+                aciklama = container.text_area("Değerlendirmenizi yazınız:",value=aciklama,max_chars=250)
+            
+                puan = container.number_input("Veteriner Puanı:",value=puan,min_value=0,max_value=10)
+
+                if rev_d is not None and not rev_d.empty:
+                    if container.button("Düzenle"):
+                        update_q = """
+                        UPDATE reviewverir SET Açıklama = %s, Puan = %s, Anonim = %s WHERE HayvanSahibiID = %s and VeterinerID = %s
+                        """
+                        params = aciklama,str(puan),anon,str(st.session_state.kullanıcı_id),str(st.session_state.veteriner_id)
+                        try:
+                            update_data(update_q,params)
+                            container.success("Değerlendirmeniz başarıyla düzenlendi.")
+                        except:
+                            container.error("Değerlendirme düzenlenirken bir hata oluştu. Lütfen tekrar deneyiniz")
+                else:
+                    if container.button("Gönder"):
+                        insert_q = """
+                        insert into reviewverir values(%s,%s,%s,%s,%s)
+                        """
+                        p = str(st.session_state.kullanıcı_id),str(st.session_state.veteriner_id),aciklama,str(puan),anon
+                        try:
+                            insert_data(insert_q,p)
+                            container.success("Değerlendirmeniz başarıyla gönderildi.")
+                        except:
+                            container.error("Değerlendirme gönderilirken bir hata oluştu. Lütfen tekrar deneyiniz")
+                        
+            
+            case 2:
+                # Reçete bilgileri
+                if randevular is not None and not randevular.empty:
+                    print(randevular.iloc[0]['Tarih'])
+                    print(randevular.iloc[0]['Tarih']+d.timedelta(days=1))
+                    r_q ="""
+                    select e.ReçeteID, e.Tarih, e.aciklama as 'Açıklama'
+                    from randevu as r
+                    inner join reçete as e
+	                on e.VeterinerID = r.VeterinerID and e.HastaHayvanID = r.HastaID
+                    where r.VeterinerID ='{}' and r.SahipID ='{}' and r.HastaID = '{}' and e.Tarih between '{}' and '{}'
+                    """.format(st.session_state.veteriner_id,st.session_state.kullanıcı_id,st.session_state.hayvan_id,randevular.iloc[0]['Tarih'],randevular.iloc[0]['Tarih']+d.timedelta(days=1))
+                    d_r = get_data(r_q)
+                    print(d_r)
+
+                    selected_rows_recete = pd.DataFrame()
     
-                if d_r is not None and not d_r.empty:
-                    # Convert data to a DataFrame
-                    df = pd.DataFrame(d_r)
+                    if d_r is not None and not d_r.empty:
+                        # Convert data to a DataFrame
+                        df = pd.DataFrame(d_r)
         
     
-                    # Create a GridOptionsBuilder instance
-                    gb = GridOptionsBuilder.from_dataframe(df)
-                    # Configure selection and layout options
-                    gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
-                    gb.configure_grid_options(domLayout='autoHeight')
+                        # Create a GridOptionsBuilder instance
+                        gb = GridOptionsBuilder.from_dataframe(df)
+                        # Configure selection and layout options
+                        gb.configure_selection('single', groupSelectsChildren=True, groupSelectsFiltered=True)
+                        gb.configure_grid_options(domLayout='autoHeight')
         
-                    gridOptions = gb.build()
+                        gridOptions = gb.build()
 
-                    # Display the grid with selectable rows
-                    grid_response = AgGrid(
-                        df,
-                        gridOptions=gridOptions,
-                        update_mode='MODEL_CHANGED',
-                        fit_columns_on_grid_load=True,
-                        enable_enterprise_modules=True, 
-                        width='100%',
-                    )
+                        # Display the grid with selectable rows
+                        grid_response = AgGrid(
+                            df,
+                            gridOptions=gridOptions,
+                            update_mode='MODEL_CHANGED',
+                            fit_columns_on_grid_load=True,
+                            enable_enterprise_modules=True, 
+                            width='100%',
+                        )
 
-                    selected_rows_recete = grid_response['selected_rows']
+                        selected_rows_recete = grid_response['selected_rows']
 
     
 
