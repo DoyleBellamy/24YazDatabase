@@ -1,4 +1,4 @@
-<img src="https://github.com/user-attachments/assets/d120e779-6222-41e9-a983-6e6e49d606c0" alt="Görsel Açıklaması" width="600" height="400"/>
+<img src="https://github.com/user-attachments/assets/d120e779-6222-41e9-a983-6e6e49d606c0" alt="Görsel Açıklaması" width="300" height="300"/>
 
 
 
