@@ -16,7 +16,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 
 def admin_main_page():
     st.title("Admin Ana Sayfa")
-    st.write("Veterinerler Listesi ve Bilgileri")
+    
     
     # Fetch veterinarians data from the database
     veterinarians_query = """
@@ -29,6 +29,7 @@ def admin_main_page():
     selected_rows = pd.DataFrame()
 
     if veterinarians_data is not None and not veterinarians_data.empty:
+        st.write("Veterinerler Listesi ve Bilgileri")
         # Convert data to a DataFrame
         df = pd.DataFrame(veterinarians_data)
         
@@ -53,6 +54,40 @@ def admin_main_page():
 
         selected_rows = grid_response['selected_rows']
 
+    
+
+    medicine_query = """
+    SELECT İlaçID, İsim, Miktar
+    FROM ilaçlar
+    """
+    medicine_data = get_data(medicine_query)
+
+    if medicine_data is not None and not medicine_data.empty:
+        st.write("İlaç Listesi ve Bilgileri")
+        df_meds = pd.DataFrame(medicine_data)
+
+        gb_meds = GridOptionsBuilder.from_dataframe(df_meds)
+        gb_meds.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+        gb_meds.configure_pagination(paginationAutoPageSize=False, paginationPageSize=10)  # Enable pagination
+        gb_meds.configure_grid_options(domLayout='normal')  # Change from autoHeight to normal to better handle pagination
+
+        gridOptions_meds = gb_meds.build()
+
+        grid_response_meds = AgGrid(
+            df_meds,
+            gridOptions=gridOptions_meds,
+            update_mode='MODEL_CHANGED',
+            fit_columns_on_grid_load=True,
+            enable_enterprise_modules=True,
+            height=350,  # Set a fixed height to ensure the grid does not extend too far
+            width='100%',
+        )
+
+        selected_meds = grid_response_meds['selected_rows']
+
+    
+    
+
     col1, col2, col3, col4 = st.columns([6, 4, 4, 6])
     with col1:
         if st.button("Veteriner Hekim Ekle"):
@@ -76,9 +111,13 @@ def admin_main_page():
                 delete_query = "DELETE FROM veteriner WHERE KullanıcıID = %s"
                 id = str(selected_rows['KullanıcıID'][0])
                 delete_data(delete_query, (id,))
-                delete_query_user = "DELETE FROM kullanıcı WHERE KullanıcıID = %s"
-                delete_data(delete_query_user, (id,))
                 st.rerun()  # Refresh the page to reflect the changes
+        if selected_meds is not None and not selected_meds.empty:
+            if st.button("Sil"):
+                delete_query = "DELETE FROM ilaçlar WHERE İlaçID = %s"
+                ilac_id = str(selected_meds['İlaçID'][0]  )
+                delete_data(delete_query, (ilac_id,))
+                st.rerun()
         
     
 
