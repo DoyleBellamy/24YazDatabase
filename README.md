@@ -41,10 +41,14 @@ Projemiz, bir Veteriner Kliniği için web tabanlı bir prototiptir. Sistem, ü�
 - config.py dosyasındaki bilgileri veri tabanınıza göre güncelleyin.
 - Gerekli kütüphaneleri indirin:
   ```
-  pip install mysql-connector-python  # Python ile MySQL veritabanı arasında bağlantı kurulmasını sağlar
-  pip install streamlit  # Python ile veri odaklı web uygulamaları geliştirilmesini kolaylaştırır
-  pip install st-aggrid  # Streamlit uygulamalarında etkileşimli ve dinamik veri tabloları oluşturmanızı sağlar
+  # Python ile MySQL veritabanı arasında bağlantı kurulmasını sağlar
+  pip install mysql-connector-python
+  # Python ile veri odaklı web uygulamaları geliştirilmesini kolaylaştırır
+  pip install streamlit
+  # Streamlit uygulamalarında etkileşimli ve dinamik veri tabloları oluşturmanızı sağlar
+  pip install st-aggrid  
   ```
+  
 - app.py dosyasını çalıştırıp sizi web sayfasına yönlendirmesini bekleyin:
   ```
   streamlit run app.py
