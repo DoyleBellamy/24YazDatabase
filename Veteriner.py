@@ -6,6 +6,7 @@ from utils import get_data, update_data, get_highest_id, insert_data, format_tim
 from ilacEkleme import add_medicine_page
 import GeneralUser as g
 from st_aggrid import AgGrid, GridOptionsBuilder
+from datetime import datetime
 
 # Veteriner ana sayfa fonksiyonu
 # İçindeki sayfalar:
@@ -32,10 +33,14 @@ def veterinarian_main_page():
     data = get_data(get_query_veteriner_randevular, params)
     if data is not None and not data.empty:
         # Convert data to a DataFrame
-        df = pd.DataFrame(data)
-        
+        df1 = pd.DataFrame(data)
         # Remove columns containing 'ID'
-        df = df.loc[:, ~df.columns.str.contains('ID')]
+        df = df1.loc[:, ~df1.columns.str.contains('ID')].copy()
+        if 'HastaID' in df1.columns:
+            df.loc[:, 'HastaID'] = df1['HastaID']
+        else:
+            print("HastaID column does not exist in df1.")
+
         columns = df.columns.tolist()
         for i, col in enumerate(columns):
             if col == "İsim":
@@ -72,6 +77,7 @@ def veterinarian_main_page():
         if selected_rows is not None and not selected_rows.empty:
             if st.button("Reçete Yaz"):
                 st.session_state.prev_page = st.session_state.page
+                st.session_state.hastaHayvan = selected_rows['HastaID'].iloc[0]
                 st.session_state.page = "Write Prescription"
                 st.rerun()
     with col2:
@@ -91,6 +97,8 @@ def veterinarian_main_page():
 def veterinarian_info_page():
 
     # Veteriner bilgilerini getir
+
+    # TODO Bu kodu düzeltmek gerek
     veteriner_info_query ="""
     SELECT * FROM veteriner INNER JOIN kullanıcı on kullanıcı.KullanıcıID = veteriner.KullanıcıID WHERE veteriner.KullanıcıID = '{}'
     """.format(st.session_state.veteriner_id)
@@ -179,23 +187,166 @@ def veterinarian_change_password_page():
         st.session_state.prev_page = "Veterinarian Main"
         st.rerun()
 
-# Reçete yaz sayfası fonksiyonu
+
+# TODO Negatif doz verememesi hem SQL'de hem de burada eklenebilir
+# TODO Buraya zaman kalırsa bir transaction eklenebilir
 def write_prescription_page():
     st.title("Reçete Yaz")
+
+    if 'prescriptions' not in st.session_state:
+        st.session_state.prescriptions = [{'ilac': '', 'doz': 0}]
+
+    # İlaç ve doz alanlarını dinamik olarak ekle
+    for i, prescription in enumerate(st.session_state.prescriptions):
+        col1, col2 = st.columns(2)
+        with col1:        
+            st.session_state.prescriptions[i]['ilac'] = st.text_input(f"İlaç {i+1}", prescription['ilac'], key=f'ilac_{i}')
+        with col2:
+            st.session_state.prescriptions[i]['doz'] = st.number_input(f"Doz {i+1}", prescription['doz'], key=f'doz_{i}')
+    
+    # Yeni ilaç ve doz alanı eklemek için buton
     col1, col2 = st.columns(2)
     with col1:
-        st.text_area("İlaç")
+        if st.button("Arttır"):
+            st.session_state.prescriptions.append({'ilac': '', 'doz': 0})
+    
+    # İlaç ve doz alanlarını azaltmak için buton
     with col2:
-        st.text_area("Doz")
-    st.text_area("Açıklama")
+        if st.button("Azalt"):
+            if len(st.session_state.prescriptions) > 1:
+                st.session_state.prescriptions.pop()
+
+    aciklama = st.text_area("Açıklama")
+
     if st.button("Reçeteyi Onayla"):
-        st.write("Reçete onaylandı!")  # Placeholder for prescription approval
+        # İlaç ve doz bilgilerini bastır
+        empty_fields = False
+        for prescription in st.session_state.prescriptions:
+            if not prescription['ilac'] or not prescription['doz']:
+                empty_fields = True
+                break
+        if not aciklama or aciklama.strip() == '':
+            empty_fields = True
+        
+        if empty_fields:
+            st.error("Lütfen tüm ilaç, doz ve açıklama alanlarını doldurun.")
+
+        # TODO Asil islemlerin kisimlari burada
+        else:
+            # Reçeteyi 1 Kere Eklemek Yeterli
+            recete_id = get_highest_id('reçete', 'ReçeteID')
+            recete_id = recete_id + 1
+            current_datetime = datetime.now()
+            insert_query_recete = """
+            INSERT INTO reçete (ReçeteID, Tarih, VeterinerID, HastaHayvanID, aciklama)
+            VALUES (%s,%s, %s, %s, %s)
+            """
+            params_recete = (str(recete_id),current_datetime,str(st.session_state.veteriner_id),str(st.session_state.hastaHayvan), aciklama)
+            insert_data(insert_query_recete,params_recete)
+
+            for i, prescription in enumerate(st.session_state.prescriptions):
+                ilaclar_query = """
+                SELECT ilaçID FROM bil372_project.ilaçlar
+                WHERE İsim = %s;
+                """
+                params = (prescription['ilac'],)
+                ilaclar_temp = get_data(query=ilaclar_query, params=params)
+                
+                # Burada sadece reçete kısmına hazırda olan ilac icin icerir kısmına id'ler ve doz eklenecek
+                if ilaclar_temp is not None and not ilaclar_temp.empty:
+                    ilac_id = ilaclar_temp['ilaçID'][0]
+                    insert_query_icerir = """
+                    INSERT INTO içerir (İlaçID, ReçeteID, doz)
+                    VALUES (%s,%s, %s)
+                    """
+                    params_icerir = (str(ilac_id),recete_id,prescription['doz'])
+                    insert_data(insert_query_icerir,params_icerir)
+                
+                # Burada ise tum degerleri null olacak sekilde hem ilac eklenecek sonrasinda icerir kısmına deger eklenecek
+                else:
+                    ilac_id_new = get_highest_id('ilaçlar', 'İlaçID')
+                    ilac_id_new = ilac_id_new + 1
+                    insert_query_ilaclar = """
+                    INSERT INTO ilaçlar (İlaçID, İsim, Fiyat, Miktar, AdminID)
+                    VALUES (%s,%s, %s, %s, %s)
+                    """
+                    params_ilac = (str(ilac_id_new), prescription['ilac'], None, None, None)
+                    insert_data(insert_query_ilaclar,params_ilac)
+
+
+                    insert_query_icerir = """
+                    INSERT INTO içerir (İlaçID, ReçeteID, doz)
+                    VALUES (%s,%s, %s)
+                    """
+                    params_icerir = (str(ilac_id_new),recete_id,prescription['doz'])
+                    insert_data(insert_query_icerir,params_icerir)
+
+            st.session_state.prescriptions = [{'ilac': '', 'doz': 0}]
+            st.session_state.page = st.session_state.prev_page
+            st.rerun()
+                
 
     if st.button("Geri"):
+        st.session_state.prescriptions = [{'ilac': '', 'doz': 0}]
         st.session_state.page = st.session_state.prev_page
         st.rerun()
 
 
+
 # Reçete yaz sayfası fonksiyonu
+# TODO Burada seçtiğinin için alt tarafta bilgilerini gorecek 
+# TODO Yazılacak Onemli Kısım Burası Kaldı
 def all_appointments():
-    print('dummy')
+    st.title("Tüm Randevular")
+
+    get_query_veteriner_randevular = """
+    SELECT * FROM bil372_project.randevu r
+    Join hayvansahibi hs on hs.kullanıcıID = r.sahipID
+    Join hastahayvan hh on hh.sahipID = hs.kullanıcıID
+    WHERE veterinerID = %s ;
+    """
+    params = (str(st.session_state.veteriner_id),)
+    
+    selected_rows = pd.DataFrame()
+
+    data = get_data(get_query_veteriner_randevular, params)
+    if data is not None and not data.empty:
+        # Convert data to a DataFrame
+        df = pd.DataFrame(data)
+        
+        # Remove columns containing 'ID'
+        df = df.loc[:, ~df.columns.str.contains('ID')]
+        columns = df.columns.tolist()
+        for i, col in enumerate(columns):
+            if col == "İsim":
+                columns[i] = "Sahip İsmi"
+                break
+        df.columns = columns
+
+        # Create a GridOptionsBuilder instance
+        gb = GridOptionsBuilder.from_dataframe(df)
+        # Configure selection and layout options
+        gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+        gb.configure_grid_options(domLayout='autoHeight')
+        
+        gb.configure_column("Tarih", filter="agDateColumnFilter")
+        gridOptions = gb.build()
+
+        # Display the grid with selectable rows
+        grid_response = AgGrid(
+            df,
+            gridOptions=gridOptions,
+            update_mode='MODEL_CHANGED',
+            fit_columns_on_grid_load=True,
+            enable_enterprise_modules=True, 
+            width='100%',
+        )
+        selected_rows = grid_response['selected_rows']
+
+    else:
+        st.warning("Randevu Bulunamadı.")
+
+    # TODO Buna basinca geri sayfada biraz bozuluyor düzeltilebilir.   
+    if st.button("Geri"):
+        st.session_state.page = st.session_state.prev_page
+        st.rerun()
