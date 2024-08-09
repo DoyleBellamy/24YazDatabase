@@ -269,8 +269,8 @@ def past_appointments_page():
                     from randevu as r
                     inner join reçete as e
 	                on e.VeterinerID = r.VeterinerID and e.HastaHayvanID = r.HastaID
-                    where r.VeterinerID ='{}' and r.SahipID ='{}' and r.HastaID = '{}' and e.Tarih between '{}' and '{}'
-                    """.format(st.session_state.veteriner_id,st.session_state.kullanıcı_id,st.session_state.hayvan_id,randevular.iloc[0]['Tarih'],randevular.iloc[0]['Tarih']+d.timedelta(days=1))
+                    where r.VeterinerID ='{}' and r.SahipID ='{}' and r.HastaID = '{}' and e.Tarih between r.Tarih and Date_ADD(r.Tarih, INTERVAL +1 day)
+                    """.format(st.session_state.veteriner_id,st.session_state.kullanıcı_id,st.session_state.hayvan_id)
                     d_r = get_data(r_q)
                     print(d_r)
 
