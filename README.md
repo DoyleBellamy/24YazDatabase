@@ -36,6 +36,6 @@ Projemiz, bir Veteriner Kliniği için web tabanlı bir prototiptir. Sistem, ü�
 - SQL Codes klasöründe bulunan güncel veri tabanı kodlarını kullandığınız MySQL destekli veri tabanı yönetim aracınızda çalıştırıp gerekli schemayı elde edin.
 - config.py dosyasındaki bilgileri veri tabanınıza göre güncelleyin.
 - Gerekli kütüphaneleri indirin ve app.py dosyasını çalıştırıp sizi web sayfasına yönlendirmesini bekleyin:
-```
-streamlit run app.py
-```
+  ```
+  streamlit run app.py
+  ```
