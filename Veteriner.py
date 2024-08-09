@@ -295,7 +295,9 @@ def write_prescription_page():
 
 # Reçete yaz sayfası fonksiyonu
 # TODO Burada seçtiğinin için alt tarafta bilgilerini gorecek 
-# TODO Yazılacak Onemli Kısım Burası Kaldı
+# Gorecekleri : 1) Review Varsa Onu Görsün
+            #   2) Reçete Varsa Onu Görsün
+            #   3) DUSUNULECEK 
 def all_appointments():
     st.title("Tüm Randevular")
 
