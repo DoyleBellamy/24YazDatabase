@@ -29,7 +29,7 @@ Projemiz, bir Veteriner Kliniği için web tabanlı bir prototiptir. Sistem, ü�
 
 ### Nasıl Çalıştırılır?
 
-- Repository'i lokal bilgisayarınıza kopyalayın:
+- "24YazDatabase" repository'sini lokal bilgisayarınıza kopyalayın:
   ```
   https://github.com/DoyleBellamy/24YazDatabase.git
   ```
