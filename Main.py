@@ -11,8 +11,6 @@ from ilacEkleme import add_medicine_page
 #   - register_page
 
 def main_page():
-    st.title("Ana Sayfa")
-    st.write("Bu, ana sayfanızdır.")
     st.markdown(
         """
         <div style="display: flex; justify-content: center;">
