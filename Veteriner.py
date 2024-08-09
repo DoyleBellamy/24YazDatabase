@@ -193,14 +193,32 @@ def veterinarian_change_password_page():
 def write_prescription_page():
     st.title("Reçete Yaz")
 
+    # Fetch the list of available ilaçlar from the database
+    ilac_query = "SELECT İlaçID, İsim FROM ilaçlar"
+    ilac_data = get_data(ilac_query)
+
+    # Extracting the 'İsim' and 'İlaçID' into lists
+    ilac_names = []
+    ilac_ids = {}
+    if ilac_data is not None and not ilac_data.empty:
+        df_ilac = pd.DataFrame(ilac_data)
+        ilac_names = df_ilac['İsim'].tolist()
+        ilac_ids = {row['İsim']: row['İlaçID'] for _, row in df_ilac.iterrows()}
+
     if 'prescriptions' not in st.session_state:
         st.session_state.prescriptions = [{'ilac': '', 'doz': 0}]
 
     # İlaç ve doz alanlarını dinamik olarak ekle
     for i, prescription in enumerate(st.session_state.prescriptions):
         col1, col2 = st.columns(2)
-        with col1:        
-            st.session_state.prescriptions[i]['ilac'] = st.text_input(f"İlaç {i+1}", prescription['ilac'], key=f'ilac_{i}')
+        with col1:
+            # Use selectbox for İlaç selection instead of text_input
+            st.session_state.prescriptions[i]['ilac'] = st.selectbox(
+                f"İlaç {i+1}", 
+                options=ilac_names,
+                index=ilac_names.index(prescription['ilac']) if prescription['ilac'] in ilac_names else 0,
+                key=f'ilac_{i}'
+            )
         with col2:
             st.session_state.prescriptions[i]['doz'] = st.number_input(f"Doz {i+1}", prescription['doz'], key=f'doz_{i}')
     
@@ -233,64 +251,35 @@ def write_prescription_page():
 
         # TODO Asil islemlerin kisimlari burada
         else:
-            # Reçeteyi 1 Kere Eklemek Yeterli
             recete_id = get_highest_id('reçete', 'ReçeteID')
-            recete_id = recete_id + 1
+            recete_id += 1
             current_datetime = datetime.now()
             insert_query_recete = """
             INSERT INTO reçete (ReçeteID, Tarih, VeterinerID, HastaHayvanID, aciklama)
             VALUES (%s,%s, %s, %s, %s)
             """
-            params_recete = (str(recete_id),current_datetime,str(st.session_state.veteriner_id),str(st.session_state.hastaHayvan), aciklama)
-            insert_data(insert_query_recete,params_recete)
+            params_recete = (str(recete_id), current_datetime, str(st.session_state.veteriner_id), str(st.session_state.hastaHayvan), aciklama)
+            insert_data(insert_query_recete, params_recete)
 
             for i, prescription in enumerate(st.session_state.prescriptions):
-                ilaclar_query = """
-                SELECT ilaçID FROM bil372_project.ilaçlar
-                WHERE İsim = %s;
-                """
-                params = (prescription['ilac'],)
-                ilaclar_temp = get_data(query=ilaclar_query, params=params)
-                
-                # Burada sadece reçete kısmına hazırda olan ilac icin icerir kısmına id'ler ve doz eklenecek
-                if ilaclar_temp is not None and not ilaclar_temp.empty:
-                    ilac_id = ilaclar_temp['ilaçID'][0]
+                ilac_id = ilac_ids.get(prescription['ilac'])
+
+                if ilac_id:
                     insert_query_icerir = """
                     INSERT INTO içerir (İlaçID, ReçeteID, doz)
                     VALUES (%s,%s, %s)
                     """
-                    params_icerir = (str(ilac_id),recete_id,prescription['doz'])
-                    insert_data(insert_query_icerir,params_icerir)
-                
-                # Burada ise tum degerleri null olacak sekilde hem ilac eklenecek sonrasinda icerir kısmına deger eklenecek
-                else:
-                    ilac_id_new = get_highest_id('ilaçlar', 'İlaçID')
-                    ilac_id_new = ilac_id_new + 1
-                    insert_query_ilaclar = """
-                    INSERT INTO ilaçlar (İlaçID, İsim, Fiyat, Miktar, AdminID)
-                    VALUES (%s,%s, %s, %s, %s)
-                    """
-                    params_ilac = (str(ilac_id_new), prescription['ilac'], None, None, None)
-                    insert_data(insert_query_ilaclar,params_ilac)
-
-
-                    insert_query_icerir = """
-                    INSERT INTO içerir (İlaçID, ReçeteID, doz)
-                    VALUES (%s,%s, %s)
-                    """
-                    params_icerir = (str(ilac_id_new),recete_id,prescription['doz'])
-                    insert_data(insert_query_icerir,params_icerir)
+                    params_icerir = (str(ilac_id), recete_id, prescription['doz'])
+                    insert_data(insert_query_icerir, params_icerir)
 
             st.session_state.prescriptions = [{'ilac': '', 'doz': 0}]
             st.session_state.page = st.session_state.prev_page
             st.rerun()
-                
 
     if st.button("Geri"):
         st.session_state.prescriptions = [{'ilac': '', 'doz': 0}]
         st.session_state.page = st.session_state.prev_page
         st.rerun()
-
 
 
 # Reçete yaz sayfası fonksiyonu
