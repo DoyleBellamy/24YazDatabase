@@ -295,6 +295,7 @@ def write_prescription_page():
 
 # Reçete yaz sayfası fonksiyonu
 # TODO Burada seçtiğinin için alt tarafta bilgilerini gorecek 
+# TODO Yazılacak Onemli Kısım Burası Kaldı
 def all_appointments():
     st.title("Tüm Randevular")
 
