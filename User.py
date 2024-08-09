@@ -284,7 +284,7 @@ def past_appointments_page():
                         # Create a GridOptionsBuilder instance
                         gb = GridOptionsBuilder.from_dataframe(df)
                         # Configure selection and layout options
-                        gb.configure_selection('single', groupSelectsChildren=True, groupSelectsFiltered=True)
+                        gb.configure_selection('single')
                         gb.configure_grid_options(domLayout='autoHeight')
         
                         gridOptions = gb.build()
