@@ -255,7 +255,6 @@ def write_prescription_page():
                 # Burada sadece reçete kısmına hazırda olan ilac icin icerir kısmına id'ler ve doz eklenecek
                 if ilaclar_temp is not None and not ilaclar_temp.empty:
                     ilac_id = ilaclar_temp['ilaçID'][0]
-                    print(ilac_id)
                     insert_query_icerir = """
                     INSERT INTO içerir (İlaçID, ReçeteID, doz)
                     VALUES (%s,%s, %s)
@@ -267,7 +266,6 @@ def write_prescription_page():
                 else:
                     ilac_id_new = get_highest_id('ilaçlar', 'İlaçID')
                     ilac_id_new = ilac_id_new + 1
-                    print(ilac_id_new)
                     insert_query_ilaclar = """
                     INSERT INTO ilaçlar (İlaçID, İsim, Fiyat, Miktar, AdminID)
                     VALUES (%s,%s, %s, %s, %s)
