@@ -134,7 +134,58 @@ def user_main_page():
 
 # Geçmiş randevular sayfası fonksiyonu
 def past_appointments_page():
+
+    q ="""
+    select v.isim as 'Veteriner İsmi', r.Tarih
+    from randevu as r
+    inner join veteriner as v
+	    on v.KullanıcıID = r.VeterinerID
+    where r.Tarih<'{}' and r.SahipID = '{}'
+    ;
+    """.format(d.date.today(),st.session_state.kullanıcı_id)
+
+    try:
+        randevular = get_data(q)
+    except:
+        st.error("Geçmiş randevular getirilirken bir hata oluştu. Lütfen tekrar deneyiniz.")
+    selected_rows = pd.DataFrame()
+
     st.title("Geçmiş Randevular")
+    
+    if randevular is not None and not randevular.empty:
+        # Convert data to a DataFrame
+        df = pd.DataFrame(randevular)
+        
+    
+        # Create a GridOptionsBuilder instance
+        gb = GridOptionsBuilder.from_dataframe(df)
+        # Configure selection and layout options
+        gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
+        gb.configure_grid_options(domLayout='autoHeight')
+        
+        gridOptions = gb.build()
+
+        # Display the grid with selectable rows
+        grid_response = AgGrid(
+            df,
+            gridOptions=gridOptions,
+            update_mode='MODEL_CHANGED',
+            fit_columns_on_grid_load=True,
+            enable_enterprise_modules=True, 
+            width='100%',
+        )
+
+        selected_rows = grid_response['selected_rows']
+
+   
+    if selected_rows is not None and not selected_rows.empty:
+            if st.button("Sil"):
+                delete_query = "DELETE FROM veteriner WHERE KullanıcıID = %s"
+                id = str(selected_rows['KullanıcıID'][0])
+                delete_data(delete_query, (id,))
+                delete_query_user = "DELETE FROM kullanıcı WHERE KullanıcıID = %s"
+                delete_data(delete_query_user, (id,))
+                st.rerun()  # Refresh the page to reflect the changes
     if st.button("Geri"):
         st.session_state.page = st.session_state.prev_page
         st.rerun()
