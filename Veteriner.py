@@ -376,6 +376,7 @@ def all_appointments():
         st.write(data2)
         
         if data2 is not None and not data2.empty:
+            st.write('Reçetedeki İlaçlar')
             get_query_veteriner_recete_ilaclar = """
             SELECT *
             FROM bil372_project.içerir i
