@@ -26,3 +26,10 @@ Projemiz, bir Veteriner Kliniği için web tabanlı bir prototiptir. Sistem, ü�
 
 - Sisteme yeni veteriner ve ilaç bilgileri girebilir.
 - Gerektiğinde bu bilgileri sistemden kaldırabilir.
+
+### Nasıl Çalıştırılır?
+
+- Repository'i lokal bilgisayarına kopyalayın:
+  ```
+  https://github.com/DoyleBellamy/24YazDatabase.git
+  ```
