@@ -210,14 +210,13 @@ def write_prescription_page():
     aciklama = st.text_area("Açıklama")
 
     if st.button("Reçeteyi Onayla"):
-        st.write("Reçete onaylandı!")  # Placeholder for prescription approval
         # İlaç ve doz bilgilerini bastır
         empty_fields = False
         for prescription in st.session_state.prescriptions:
             if not prescription['ilac'] or not prescription['doz']:
                 empty_fields = True
                 break
-        if not aciklama:
+        if not aciklama or aciklama.strip() == '':
             empty_fields = True
         
         if empty_fields:
