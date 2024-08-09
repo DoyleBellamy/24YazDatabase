@@ -162,7 +162,6 @@ def past_appointments_page():
         gb = GridOptionsBuilder.from_dataframe(df)
         # Configure selection and layout options
         gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
-        gb.configure_grid_options(domLayout='autoHeight')
         
         gridOptions = gb.build()
 
@@ -171,9 +170,9 @@ def past_appointments_page():
             df,
             gridOptions=gridOptions,
             update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
             enable_enterprise_modules=True, 
             width='100%',
+            height=200
         )
 
         selected_rows = grid_response['selected_rows']
@@ -285,7 +284,6 @@ def past_appointments_page():
                         gb = GridOptionsBuilder.from_dataframe(df)
                         # Configure selection and layout options
                         gb.configure_selection('single')
-                        gb.configure_grid_options(domLayout='autoHeight')
         
                         gridOptions = gb.build()
 
@@ -294,9 +292,9 @@ def past_appointments_page():
                             df,
                             gridOptions=gridOptions,
                             update_mode='MODEL_CHANGED',
-                            fit_columns_on_grid_load=True,
                             enable_enterprise_modules=True, 
                             width='100%',
+                            height=200,
                         )
 
                         selected_rows_recete = grid_response['selected_rows']
@@ -501,7 +499,6 @@ def book_appointment_page():
         gb = GridOptionsBuilder.from_dataframe(df)
         # Configure selection and layout options
         gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
-        gb.configure_grid_options(domLayout='autoHeight')
         
         gridOptions = gb.build()
 
@@ -510,9 +507,9 @@ def book_appointment_page():
             df,
             gridOptions=gridOptions,
             update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
             enable_enterprise_modules=True, 
             width='100%',
+            height=200,
         )
 
         selected_rows = grid_response['selected_rows']

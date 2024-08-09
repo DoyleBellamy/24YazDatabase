@@ -7,6 +7,7 @@ from ilacEkleme import add_medicine_page
 import GeneralUser as g
 from st_aggrid import AgGrid, GridOptionsBuilder
 from datetime import datetime
+from datetime import timedelta  # timedelta fonksiyonunu import edin
 
 # Veteriner ana sayfa fonksiyonu
 # İçindeki sayfalar:
@@ -24,7 +25,7 @@ def veterinarian_main_page():
     SELECT * FROM bil372_project.randevu r
     Join hayvansahibi hs on hs.kullanıcıID = r.sahipID
     Join hastahayvan hh on hh.sahipID = hs.kullanıcıID
-    WHERE veterinerID = %s and r.Tarih >= DATE_SUB(CURDATE(), INTERVAL 10 DAY);
+    WHERE veterinerID = %s and r.Tarih >= DATE_SUB(CURDATE(), INTERVAL 7 DAY);
     """
     params = (str(st.session_state.veteriner_id),)
     
@@ -52,7 +53,6 @@ def veterinarian_main_page():
         gb = GridOptionsBuilder.from_dataframe(df)
         # Configure selection and layout options
         gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
-        gb.configure_grid_options(domLayout='autoHeight')
         
         gb.configure_column("Tarih", filter="agDateColumnFilter")
         gridOptions = gb.build()
@@ -62,9 +62,9 @@ def veterinarian_main_page():
             df,
             gridOptions=gridOptions,
             update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
             enable_enterprise_modules=True, 
             width='100%',
+            height=200
         )
         selected_rows = grid_response['selected_rows']
 
@@ -296,15 +296,17 @@ def all_appointments():
     """
     params = (str(st.session_state.veteriner_id),)
     
-    selected_rows = pd.DataFrame()
 
     data = get_data(get_query_veteriner_randevular, params)
+
+    selected_rows = pd.DataFrame()
+
     if data is not None and not data.empty:
         # Convert data to a DataFrame
         df = pd.DataFrame(data)
         
         # Remove columns containing 'ID'
-        df = df.loc[:, ~df.columns.str.contains('ID')]
+        # df = df.loc[:, ~df.columns.str.contains('ID')]
         columns = df.columns.tolist()
         for i, col in enumerate(columns):
             if col == "İsim":
@@ -316,8 +318,6 @@ def all_appointments():
         gb = GridOptionsBuilder.from_dataframe(df)
         # Configure selection and layout options
         gb.configure_selection('single', use_checkbox=True, groupSelectsChildren=True, groupSelectsFiltered=True)
-        gb.configure_grid_options(domLayout='autoHeight')
-        
         gb.configure_column("Tarih", filter="agDateColumnFilter")
         gridOptions = gb.build()
 
@@ -326,14 +326,57 @@ def all_appointments():
             df,
             gridOptions=gridOptions,
             update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
             enable_enterprise_modules=True, 
             width='100%',
+            height=200,
         )
         selected_rows = grid_response['selected_rows']
 
     else:
         st.warning("Randevu Bulunamadı.")
+
+    if selected_rows is not None and not selected_rows.empty:
+        st.write('Review')
+        get_query_veteriner_review = """
+        SELECT *
+        FROM bil372_project.reviewverir rv
+        WHERE HayvanSahibiID = %s and VeterinerID = %s and Anonim = False;
+        """
+        params = (str(selected_rows['SahipID'].iloc[0]), str(selected_rows['VeterinerID'].iloc[0]))
+        
+        data = get_data(get_query_veteriner_review, params)
+
+        st.write(data)
+
+    if selected_rows is not None and not selected_rows.empty:
+        st.write('Reçete')
+
+        get_query_veteriner_recete = """
+        SELECT *
+        FROM bil372_project.reçete r
+        WHERE VeterinerID = %s and HastaHayvanID = %s and Tarih between %s and %s;
+        """
+        tarih_value = pd.to_datetime(selected_rows['Tarih'].iloc[0])
+        params = (str(selected_rows['VeterinerID'].iloc[0]), str(selected_rows['HastaID'].iloc[0]), tarih_value , tarih_value + timedelta(days=7))
+        print(str(selected_rows['VeterinerID'].iloc[0]))
+        print(str(selected_rows['HastaID'].iloc[0]))
+        print(selected_rows['Tarih'].iloc[0])
+        data2 = get_data(get_query_veteriner_recete, params)
+
+        st.write(data2)
+        
+        if data2 is not None and not data2.empty:
+            get_query_veteriner_recete_ilaclar = """
+            SELECT *
+            FROM bil372_project.içerir i
+            Natural Join bil372_project.ilaçlar
+            WHERE ReçeteID = %s;
+            """
+            tarih_value = pd.to_datetime(selected_rows['Tarih'].iloc[0])
+            params3 = (str(data2['ReçeteID'].iloc[0]),)
+            data3 = get_data(get_query_veteriner_recete_ilaclar, params3)
+            st.write(data3)
+
 
     # TODO Buna basinca geri sayfada biraz bozuluyor düzeltilebilir.   
     if st.button("Geri"):
