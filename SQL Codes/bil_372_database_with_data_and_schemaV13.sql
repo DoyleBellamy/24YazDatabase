@@ -114,7 +114,7 @@ CREATE TABLE `ilaçlar` (
   `İsim` varchar(255) NOT NULL,
   `Fiyat` varchar(255) DEFAULT NULL,
   `Miktar` varchar(255) DEFAULT NULL,
-  `AdminID` int NOT NULL,
+  `AdminID` int,
   PRIMARY KEY (`İlaçID`),
   UNIQUE KEY `İsim` (`İsim`,`AdminID`),
   KEY `AdminID` (`AdminID`),
