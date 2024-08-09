@@ -62,7 +62,6 @@ def veterinarian_main_page():
             df,
             gridOptions=gridOptions,
             update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
             enable_enterprise_modules=True, 
             width='100%',
         )
@@ -317,7 +316,7 @@ def all_appointments():
         df = pd.DataFrame(data)
         
         # Remove columns containing 'ID'
-        df = df.loc[:, ~df.columns.str.contains('ID')]
+        # df = df.loc[:, ~df.columns.str.contains('ID')]
         columns = df.columns.tolist()
         for i, col in enumerate(columns):
             if col == "İsim":
@@ -339,7 +338,6 @@ def all_appointments():
             df,
             gridOptions=gridOptions,
             update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
             enable_enterprise_modules=True, 
             width='100%',
         )

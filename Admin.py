@@ -46,7 +46,6 @@ def admin_main_page():
             df,
             gridOptions=gridOptions,
             update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
             enable_enterprise_modules=True, 
             width='100%',
         )
